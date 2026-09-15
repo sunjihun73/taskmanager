@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+
+	<!--  파일정보 -->
+    <Properties>
+    	<Property name="infoLogNm">D:/DEV/ide/work/logs/task.log</Property>
+    	<Property name="errorLogNm">D:/DEV/ide/work/logs/task.log</Property>
+    	<Property name="authLogNm">D:/DEV/ide/work/logs/task.log</Property>
+    	<Property name="jsonInfoLogNm">D:/DEV/ide/work/logs/task_info.log</Property>
+		<Property name="layoutPattern">%d{yyyy-MM-dd HH:mm:ss.SSS} (%-5level) (%-4relative) --- [ %thread{10}, %X{traceId}, %X{spanId} ] (%logger{20}) : %msg%n</Property>
+    </Properties>
+
+	<!-- 생성 파일 정보 -->
+    <Appenders>
+        <Console name="Console_Appender" target="SYSTEM_OUT" >
+            <PatternLayout pattern="${layoutPattern}"/>
+        </Console>
+		
+        <!-- info level -->
+		<File name="File_Info_Appender">
+			<fileName>${infoLogNm}</fileName>
+			<PatternLayout>
+                <pattern>%d %p %C{1.} [%t] %m%n</pattern>
+            </PatternLayout>
+		</File>
+        
+		<!-- error level -->
+		<File name="File_Error_Appender">
+			<fileName>${errorLogNm}</fileName>
+			<PatternLayout>
+                <pattern>%d %p %C{1.} [%t] %m%n</pattern>
+            </PatternLayout>
+		</File>
+		
+		<!-- auth management -->
+		<File name="File_Auth_Appender">
+			<fileName>${authLogNm}</fileName>
+			<PatternLayout>
+                <pattern>%d %p %C{1.} [%t] %m%n</pattern>
+            </PatternLayout>
+		</File>
+		
+		<!-- json api info -->
+		<File name="File_Json_info_Appender">
+			<fileName>${jsonInfoLogNm}</fileName>
+			<PatternLayout>
+                <pattern>%d %p %C{1.} [%t] %m%n</pattern>
+            </PatternLayout>
+		</File>
+    </Appenders>
+  
+	<!-- 로그 범위  -->
+    <Loggers>
+		<!-- Spring 관련 로그  -->
+		<Logger name="org.springframework" additivity="false" level="DEBUG">
+            <AppenderRef ref="Console_Appender" />
+            <AppenderRef ref="File_Info_Appender"/>
+            <AppenderRef ref="File_Error_Appender"/>
+		</Logger>
+		
+		<!-- 프로젝트 로그 -->
+		<logger name="kr.co.dbinc.task" additivity="false" level="DEBUG">
+            <AppenderRef ref="Console_Appender" />
+            <AppenderRef ref="File_Info_Appender"/>
+            <AppenderRef ref="File_Error_Appender"/>
+		</logger>
+       
+		<!-- Default 세팅 -->
+	    <root additivity="false" level="OFF">
+           	<AppenderRef ref="Console_Appender" />
+		</root>
+    </Loggers>
+</Configuration>

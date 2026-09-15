@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.task.CompanyMapper">
+	
+	<select id="getCompanies" parameterType="String" resultType="kr.co.dbinc.task.dto.company.GetCompanyDTO$GetCompanyResponse">
+		SELECT
+			COMPANY_CD
+			, COMPANY_NM
+		FROM
+			COMPANY_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND (USE_YN != 'N' OR USE_YN IS NULL)
+		</where>
+		ORDER BY
+			COMPANY_CD
+	</select>
+	
+	<select id="getCompaniesForMail" parameterType="String" resultType="kr.co.dbinc.task.dto.company.GetCompanyDTO$GetCompanyResponse">
+		SELECT
+			COMPANY_CD
+			, EP_SSO_API_GW_URL
+			, EP_SYSTEM_ID
+		FROM
+			COMPANY_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND (USE_YN != 'N' OR USE_YN IS NULL)
+		</where>
+		ORDER BY
+			COMPANY_CD
+	</select>
+	
+	<select id="getCompanyForMail" parameterType="String" resultType="kr.co.dbinc.task.dto.company.GetCompanyDTO$GetCompanyResponse">
+		SELECT
+			COMPANY_CD
+			, EP_SSO_API_GW_URL
+			, EP_SYSTEM_ID
+		FROM
+			COMPANY_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND (USE_YN != 'N' OR USE_YN IS NULL)
+		</where>
+	</select>
+	
+</mapper>

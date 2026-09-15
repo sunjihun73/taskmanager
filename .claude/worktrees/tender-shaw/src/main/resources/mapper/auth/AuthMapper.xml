@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.auth.AuthMapper">
+
+	<select id="selectCompanyMaster" parameterType="Map" resultType="CompanyMasterDTO">
+		SELECT 
+			DOMAIN_ID
+			, COMPANY_CD
+			, COMPANY_NM
+			, COMPANY_ENG_NM
+		    , OAUTH_TYPE
+			, LANGUAGE_CD
+			, USE_YN
+			, EP_SSO_TOKEN_CHECK_API_URL
+			, EP_SSO_API_GW_URL
+			, EP_SYSTEM_ID
+			, AUTO_EP_SYNC_YN
+			, EP_EMP_SYNC_API_URL
+			, EP_DEPT_SYNC_API_URL
+			, EP_EMP_DEPT_XREF_SYNC_API_URL
+			, TEMP_DOMAIN_ID
+			, API_AUTH_KEY
+			, UPDATE_USR
+			, UPDATE_DT
+			, CREATE_USR
+			, CREATE_DT
+		FROM
+			COMPANY_MASTER 
+		WHERE
+			COMPANY_CD = (SELECT COMPANY_CD FROM EMP_MASTER WHERE EMAIL = #{userId})
+			AND USE_YN = #{useYn}
+		LIMIT 0, 1
+	</select>
+	
+	<select id="selectEmpMaster" parameterType="Map" resultType="EmpMasterDTO">
+		SELECT 
+			a.DOMAIN_ID
+			, a.COMPANY_CD
+			, a.EMAIL
+			, a.EMP_NM
+			, a.EMP_ENG_NM
+			, a.EMP_NO
+			, a.POS_CD
+			, a.DEPT_CD
+			, a.EMP_STATUS_CD
+			, a.ENTER_DT
+			, a.QUIT_DT
+			, a.HIDDEN_YN
+			, a.JOB_TEL_NO
+			, a.MOBILE_TEL_NO
+			, a.MANUAL_MNG_YN
+			, a.UPDATE_USR
+			, a.UPDATE_DT
+			, a.CREATE_USR
+			, a.CREATE_DT
+			, b.DEPT_NM
+			, b.DEPT_ENG_NM
+			, c.COMPANY_NM
+			, c.COMPANY_ENG_NM
+		FROM
+			EMP_MASTER a
+			INNER JOIN DEPT_MASTER b ON (a.DOMAIN_ID = b.DOMAIN_ID AND a.COMPANY_CD = b.COMPANY_CD AND a.DEPT_CD = b.DEPT_CD)
+			INNER JOIN COMPANY_MASTER c on (a.DOMAIN_ID = c.DOMAIN_ID AND a.COMPANY_CD = c.COMPANY_CD)
+		WHERE
+			a.EMAIL = #{email}
+			AND a.COMPANY_CD = #{companyCd}
+	</select>	
+	
+	<select id="selectEmpAuthorityList" parameterType="Map" resultType="EmpAuthorityDTO">
+		SELECT 
+			DOMAIN_ID
+			, COMPANY_CD
+			, EMAIL
+			, AUTHORITY_NAME
+			, UPDATE_USR
+			, UPDATE_DT
+			, CREATE_USR
+			, CREATE_DT
+		FROM
+			EMP_AUTHORITY
+		WHERE
+			EMAIL = #{email}
+			AND COMPANY_CD = #{companyCd}
+			
+			
+			
+			
+	</select>		
+	
+</mapper>

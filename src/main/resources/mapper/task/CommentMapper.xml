@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.task.CommentMapper">
+	
+	<select id="getCommentList" parameterType="kr.co.dbinc.task.dto.task.GetTaskDetailDTO$GetTaskDetailRequest" resultType="GetCommentResponse">
+		SELECT 
+			C.DOMAIN_ID
+			, C.COMPANY_CD
+			, C.TASK_ID
+			, C.COMMENT_ID
+			, C.COMMENT_CONTENT
+			, C.COMMENT_RECEIVER_ID
+			, EE.EMP_NM COMMENT_RECEIVER_NM
+			, C.CREATE_USR
+			, E.EMP_NM
+            , CONVERT_TZ(C.CREATE_DT, '+00:00', '+09:00') AS CREATE_DT
+            , CONVERT_TZ(C.UPDATE_DT, '+00:00', '+09:00') AS UPDATE_DT
+		FROM
+			COMMENT_MASTER C
+			INNER JOIN EMP_MASTER E ON (E.EMAIL = C.CREATE_USR AND E.DOMAIN_ID = C.DOMAIN_ID AND E.COMPANY_CD = C.COMPANY_CD)
+			LEFT JOIN EMP_MASTER EE ON (EE.EMAIL = C.COMMENT_RECEIVER_ID AND EE.DOMAIN_ID = C.DOMAIN_ID)
+		<where>
+			C.DOMAIN_ID = #{domainId}
+			AND C.TASK_ID = #{taskId}
+		</where>
+		ORDER BY CREATE_DT
+
+	</select>
+	
+	<insert id="insertCommentMaster">
+		INSERT
+			COMMENT_MASTER (
+				DOMAIN_ID
+				, COMPANY_CD
+				, TASK_ID
+				, COMMENT_CONTENT
+				<if test="commentReceiverId != null and commentReceiverId != ''">
+				, COMMENT_RECEIVER_ID
+				</if>
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+			VALUES (
+				#{domainId}
+				, #{companyCd}
+				, #{taskId}
+				, #{commentContent}
+				<if test="commentReceiverId != null and commentReceiverId != ''">
+				, #{commentReceiverId}
+				</if>
+				, #{email}
+				, NOW()
+				, #{email}
+				, NOW()
+			)
+		
+	</insert>
+	
+	<update id="updateCommentMaster">
+		UPDATE
+			COMMENT_MASTER
+		<set>
+			COMMENT_CONTENT = #{commentContent},
+			UPDATE_DT = NOW()
+		</set>
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND TASK_ID = #{taskId}
+			AND COMMENT_ID = #{commentId}
+		</where>
+		
+	</update>
+	
+	<delete id="deleteCommentMaster">
+		DELETE FROM
+			COMMENT_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND TASK_ID = #{taskId}
+			AND COMMENT_ID = #{commentId}
+		</where>
+		
+	</delete>
+	
+	<delete id="deleteCommentList">
+		DELETE FROM
+			COMMENT_MASTER
+		WHERE
+			DOMAIN_ID = #{domainId}
+			AND TASK_ID = #{taskId}
+	</delete>
+</mapper>

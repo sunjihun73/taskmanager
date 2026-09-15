@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.admin.AdminCompanyMapper">
+
+	<select id="getCompanyList" resultType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncRequest">
+		SELECT
+			DOMAIN_ID
+			, COMPANY_CD
+			, EP_EMP_SYNC_API_URL
+			, EP_DEPT_SYNC_API_URL
+			, EP_CODE_SYNC_API_URL
+			, TEMP_DOMAIN_ID
+			, API_AUTH_KEY
+		FROM
+			COMPANY_MASTER
+		<where>
+			AUTO_EP_SYNC_YN = 'Y'
+		</where>
+	</select>
+
+	<select id="getEpSyncApi" parameterType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncRequest" resultType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncRequest">
+		SELECT
+			DOMAIN_ID
+			, COMPANY_CD
+			, EP_EMP_SYNC_API_URL
+			, EP_DEPT_SYNC_API_URL
+			, EP_CODE_SYNC_API_URL
+			, TEMP_DOMAIN_ID
+			, API_AUTH_KEY
+		FROM
+			COMPANY_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+		</where>
+	</select>
+	
+	<select id="getTempDomainId" parameterType="kr.co.dbinc.task.dto.sync.GetSyncLogDTO$GetSyncLogRequest" resultType="String">
+		SELECT
+			TEMP_DOMAIN_ID
+		FROM
+			COMPANY_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+		</where>
+	</select>
+	
+	<select id="getCompanies" parameterType="kr.co.dbinc.task.dto.company.GetCompanyDTO$GetCompanyRequest" resultType="kr.co.dbinc.task.dto.company.GetCompanyDTO$GetCompanyResponse">
+		SELECT
+			COMPANY_CD
+			, COMPANY_NM
+		FROM
+			COMPANY_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+		</where>
+		ORDER BY
+			COMPANY_CD
+	</select>
+	
+</mapper>

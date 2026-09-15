@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.admin.AdminEmpMapper">
+
+	<select id="getEmpList" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpResponse">
+		SELECT 
+			C.COMPANY_NM
+			, E.EMAIL
+			, E.EMP_NM
+			, SF_GET_CODE_NM('ko-KR', '03000', E.POS_CD, E.COMPANY_CD, E.DOMAIN_ID) AS POS_NM
+			, D.DEPT_NM
+			, E.MANUAL_MNG_YN
+			, E.HIDDEN_YN
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			<if test="deptCd != null and deptCd != ''">
+				AND D.DEPT_CD = #{deptCd}
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+			<if test="email != null and email != ''">
+				AND E.EMAIL LIKE REPLACE(CONCAT('%', #{email}, '%'), ' ','')
+			</if>
+		</where>
+		ORDER BY DEPT_ORD, D.DEPT_CD, DEPT_NM, EMP_NM
+		<if test="length != null and length != ''">
+			LIMIT #{start}, #{length}
+		</if>
+	</select>
+	
+	<select id="getEmpListCnt" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			<if test="deptCd != null and deptCd != ''">
+				AND D.DEPT_CD = #{deptCd}
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+			<if test="email != null and email != ''">
+				AND E.EMAIL LIKE REPLACE(CONCAT('%', #{email}, '%'), ' ','')
+			</if>
+		</where>
+	</select>	
+	
+	<select id="getEmpDetail" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpResponse">
+		SELECT 
+			C.DOMAIN_ID
+			, C.COMPANY_CD
+			, C.COMPANY_NM
+			, E.EMAIL
+			, E.EMP_NM
+			, E.EMP_NO
+			, SF_GET_CODE_NM('ko-KR', '03000', E.POS_CD, E.COMPANY_CD, E.DOMAIN_ID) AS POS_NM
+			, D.DEPT_NM
+			, E.ENTER_DT
+			, E.QUIT_DT
+			, E.JOB_TEL_NO
+			, E.MOBILE_TEL_NO
+			, E.MANUAL_MNG_YN
+			, E.HIDDEN_YN
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.EMAIL = #{email}
+		</where>
+	</select>
+
+	<select id="getManagers" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpResponse">
+		SELECT 
+			E.DOMAIN_ID
+			, E.COMPANY_CD
+			, C.COMPANY_NM
+			, E.EMAIL
+			, E.EMP_NM
+			, SF_GET_CODE_NM('ko-KR', '03000', E.POS_CD, E.COMPANY_CD, E.DOMAIN_ID) AS POS_NM
+			, D.DEPT_NM
+			, A.AUTHORITY_NAME
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+			INNER JOIN EMP_AUTHORITY A ON (E.COMPANY_CD = A.COMPANY_CD AND E.DOMAIN_ID = A.DOMAIN_ID AND E.EMAIL = A.EMAIL)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			AND A.AUTHORITY_NAME = "ROLE_ADMIN"
+			<if test="deptCd != null and deptCd != ''">
+				AND D.DEPT_CD = #{deptCd}
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+			<if test="email != null and email != ''">
+				AND E.EMAIL LIKE REPLACE(CONCAT('%', #{email}, '%'), ' ','')
+			</if>
+		</where>
+		ORDER BY DEPT_ORD, DEPT_NM, EMP_NM
+		<if test="length != null and length != ''">
+			LIMIT #{start}, #{length}
+		</if>
+	</select>
+	
+	<select id="getManagersCnt" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+			INNER JOIN EMP_AUTHORITY A ON (E.COMPANY_CD = A.COMPANY_CD AND E.DOMAIN_ID = A.DOMAIN_ID AND E.EMAIL = A.EMAIL)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			AND A.AUTHORITY_NAME = "ROLE_ADMIN"
+			<if test="deptCd != null and deptCd != ''">
+				AND D.DEPT_CD = #{deptCd}
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+			<if test="email != null and email != ''">
+				AND E.EMAIL LIKE REPLACE(CONCAT('%', #{email}, '%'), ' ','')
+			</if>
+		</where>
+		ORDER BY DEPT_ORD, DEPT_NM, EMP_NM
+	</select>
+	
+	<select id="getUsers" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpResponse">
+		SELECT 
+			C.COMPANY_NM
+			, E.COMPANY_CD
+			, E.EMAIL
+			, E.EMP_NM
+			, SF_GET_CODE_NM('ko-KR', '03000', E.POS_CD, E.COMPANY_CD, E.DOMAIN_ID) AS POS_NM
+			, D.DEPT_NM
+			, CASE WHEN COUNT(*) > 1 THEN 'ROLE_ADMIN' ELSE 'ROLE_USER' END AS AUTHORITY_NAME 
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+			INNER JOIN EMP_AUTHORITY A ON (E.COMPANY_CD = A.COMPANY_CD AND E.DOMAIN_ID = A.DOMAIN_ID AND E.EMAIL = A.EMAIL)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			<if test="deptCd != null and deptCd != ''">
+				AND D.DEPT_CD = #{deptCd}
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+			<if test="email != null and email != ''">
+				AND E.EMAIL LIKE REPLACE(CONCAT('%', #{email}, '%'), ' ','')
+			</if>
+		</where>
+		GROUP BY E.EMAIL
+		HAVING AUTHORITY_NAME = 'ROLE_USER'
+		ORDER BY DEPT_ORD, D.DEPT_CD, DEPT_NM, EMP_NM
+		<if test="length != null and length != ''">
+			LIMIT #{start}, #{length}
+		</if>
+	</select>
+	
+	<select id="getUsersCnt" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM (
+			SELECT 
+				C.COMPANY_NM
+				, E.COMPANY_CD
+				, E.EMAIL
+				, E.EMP_NM
+				, SF_GET_CODE_NM('ko-KR', '03000', E.POS_CD, E.COMPANY_CD, E.DOMAIN_ID) AS POS_NM
+				, D.DEPT_NM
+				, CASE WHEN COUNT(*) > 1 THEN 'ROLE_ADMIN' ELSE 'ROLE_USER' END AS AUTHORITY_NAME 
+			FROM EMP_MASTER E
+				INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+				INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+				INNER JOIN EMP_AUTHORITY A ON (E.COMPANY_CD = A.COMPANY_CD AND E.DOMAIN_ID = A.DOMAIN_ID AND E.EMAIL = A.EMAIL)
+			<where>
+				E.DOMAIN_ID = #{domainId}
+				AND E.COMPANY_CD = #{companyCd}
+				<if test="deptCd != null and deptCd != ''">
+					AND D.DEPT_CD = #{deptCd}
+				</if>
+				<if test="empNm != null and empNm != ''">
+					AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+				</if>
+				<if test="email != null and email != ''">
+				AND E.EMAIL LIKE REPLACE(CONCAT('%', #{email}, '%'), ' ','')
+			</if>
+			</where>
+			GROUP BY E.EMAIL
+			HAVING AUTHORITY_NAME = 'ROLE_USER'
+			ORDER BY DEPT_ORD, D.DEPT_CD, DEPT_NM, EMP_NM
+		) A
+	</select>
+	
+	<insert id="insertManager">
+		INSERT
+			EMP_AUTHORITY (
+				DOMAIN_ID
+				, COMPANY_CD
+				, EMAIL
+				, AUTHORITY_NAME
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+			VALUES (
+				#{domainId}
+				, #{companyCd}
+				, #{email}
+				, "ROLE_ADMIN"
+				, #{createUsr}
+				, NOW()
+				, #{createUsr}
+				, NOW()
+			)
+	</insert>
+	
+	<delete id="deleteManager">
+		DELETE FROM
+			EMP_AUTHORITY
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND EMAIL = #{email}
+			AND AUTHORITY_NAME = "ROLE_ADMIN"
+		</where>
+	</delete>
+	
+	<delete id="deleteEmp">
+		DELETE FROM
+			EMP_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND (MANUAL_MNG_YN = 'N' OR MANUAL_MNG_YN IS NULL)
+		</where>
+	</delete>
+	
+	<delete id="deleteEmpAuth">
+		DELETE FROM
+			EMP_AUTHORITY
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND AUTHORITY_NAME = "ROLE_USER"
+			AND EMAIL IN (SELECT EMAIL FROM EMP_MASTER WHERE MANUAL_MNG_YN = 'N' OR MANUAL_MNG_YN IS NULL)
+		</where>
+	</delete>
+	
+	<insert id="insertEmpFromSync">
+		INSERT IGNORE INTO 
+			EMP_MASTER (
+				DOMAIN_ID
+				, COMPANY_CD
+				, EMAIL
+				, EMP_NM
+				, EMP_ENG_NM
+				, EMP_NO
+				, POS_CD
+				, DEPT_CD
+				, EMP_STATUS_CD
+				, ENTER_DT
+				, QUIT_DT
+				, HIDDEN_YN
+				, JOB_TEL_NO
+				, MOBILE_TEL_NO
+				, MANUAL_MNG_YN
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+		SELECT
+			DOMAIN_ID
+			, COMPANY_CD
+			, EMAIL
+			, EMP_NM
+			, EMP_ENG_NM
+			, EMP_NO
+			, POS_CD
+			, DEPT_CD
+			, EMP_STATUS_CD
+			, ENTER_DT
+			, QUIT_DT
+			, HIDDEN_YN
+			, JOB_TEL_NO
+			, MOBILE_TEL_NO
+			, MANUAL_MNG_YN
+			, 'SYSTEM'
+			, now()
+			, 'SYSTEM'
+			, now()
+		FROM
+			sync_emp_master_${tempDomainId}
+		<where> 
+			AND DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+		</where>
+	</insert>
+	
+	<insert id="insertEmpAuthFromSync">
+		INSERT IGNORE INTO 
+			EMP_AUTHORITY (
+				DOMAIN_ID
+				, COMPANY_CD
+				, EMAIL
+				, AUTHORITY_NAME
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+		SELECT
+			DOMAIN_ID
+			, COMPANY_CD
+			, EMAIL
+			, 'ROLE_USER'
+			, 'SYSTEM'
+			, now()
+			, 'SYSTEM'
+			, now()
+		FROM
+			sync_emp_master_${tempDomainId}
+		<where> 
+			AND DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+		</where>
+	</insert>
+	
+	<update id="updateEmpDetail">
+		UPDATE
+			EMP_MASTER
+		<set>
+			<if test="manualMngYn != null and manualMngYn != ''">
+				MANUAL_MNG_YN = #{manualMngYn}
+			</if>
+			<if test="hiddenYn != null and hiddenYn != ''">
+				, HIDDEN_YN = #{hiddenYn}
+			</if>
+			, UPDATE_USR = #{updateUsr}
+			, UPDATE_DT = NOW()
+		</set>
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND EMAIL = #{email}
+		</where>
+	
+	</update>
+</mapper>

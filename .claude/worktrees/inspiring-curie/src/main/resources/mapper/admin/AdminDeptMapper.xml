@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.admin.AdminDeptMapper">
+
+	<select id="getDeptsAll" parameterType="kr.co.dbinc.task.dto.dept.GetDeptDTO$GetDeptRequest" resultType="kr.co.dbinc.task.dto.dept.GetDeptDTO$GetDeptResponse">
+		SELECT
+			DEPT_CD
+			, DEPT_NM
+			, PARENT_DEPT_CD
+		FROM
+			DEPT_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+		</where>
+		ORDER BY
+			DEPT_ORD, DEPT_NM
+	</select>
+	
+	<select id="getParentDeptCd" resultType="String" parameterType="kr.co.dbinc.task.dto.dept.GetDeptDetailDTO$GetDeptDetailRequest" >
+		SELECT
+			PARENT_DEPT_CD
+		FROM DEPT_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND DEPT_CD = #{deptCd}
+		</where>
+	</select>
+	
+	<select id="getDeptDetail" parameterType="kr.co.dbinc.task.dto.dept.GetDeptDetailDTO$GetDeptDetailRequest" resultType="kr.co.dbinc.task.dto.dept.GetDeptDetailDTO$GetDeptDetailResponse">
+		SELECT
+			D1.DEPT_CD
+			, D1.DEPT_NM
+			, D1.PARENT_DEPT_CD
+			<if test='parentDeptCd != "0"'>
+				, D2.DEPT_NM AS PARENT_DEPT_NM
+			</if>
+			, D1.DEPT_ORD
+			, D1.DEPT_USE_YN
+		FROM
+			DEPT_MASTER D1
+			<if test='parentDeptCd != "0"'>
+				INNER JOIN DEPT_MASTER D2 ON (D1.PARENT_DEPT_CD = D2.DEPT_CD AND D1.DOMAIN_ID = D2.DOMAIN_ID AND D1.COMPANY_CD = D2.COMPANY_CD)
+			</if>
+		<where>
+			D1.DOMAIN_ID = #{domainId}
+			AND D1.COMPANY_CD = #{companyCd}
+			AND D1.DEPT_CD = #{deptCd}
+		</where>
+		ORDER BY
+			DEPT_ORD, DEPT_NM
+	</select>
+	
+	<delete id="deleteDept">
+		DELETE FROM
+			DEPT_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+		</where>
+	</delete>
+	
+	<insert id="insertDeptFromSync">
+		INSERT INTO 
+			DEPT_MASTER (
+				DOMAIN_ID
+				, COMPANY_CD
+				, DEPT_CD
+				, DEPT_NM
+				, DEPT_ENG_NM
+				, PARENT_DEPT_CD
+				, DEPT_ORD
+				, DEPT_USE_YN
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+		SELECT
+			DOMAIN_ID
+			, COMPANY_CD
+			, DEPT_CD
+			, DEPT_NM
+			, DEPT_ENG_NM
+			, PARENT_DEPT_CD
+			, DEPT_ORD
+			, DEPT_USE_YN
+			, 'SYSTEM'
+			, now()
+			, 'SYSTEM'
+			, now()
+		FROM
+			sync_dept_master_${tempDomainId}
+		<where> 
+			AND DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+		</where>
+	</insert>
+	
+</mapper>

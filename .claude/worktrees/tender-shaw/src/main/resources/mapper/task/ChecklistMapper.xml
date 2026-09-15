@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.task.ChecklistMapper">
+	<insert id="insertChecklistMaster">
+		INSERT
+			CHECKLIST_MASTER (
+				DOMAIN_ID
+				, COMPANY_CD
+				, TASK_ID
+				, CHECK_NM
+				, CHECK_YN
+				, CHECK_ORD
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+			VALUES (
+				#{domainId}
+				, #{companyCd}
+				, #{taskId}
+				, #{checkNm}
+				, #{checkYn}
+				, #{checkOrd}
+				, #{createUsr}
+				, NOW()
+				, #{createUsr}
+				, NOW()
+			)
+		
+	</insert>
+	
+	<select id="getChecklist" parameterType="kr.co.dbinc.task.dto.task.GetTaskDetailDTO$GetTaskDetailRequest" resultType="GetChecklistResponse">
+		SELECT
+			C.DOMAIN_ID
+			, C.COMPANY_CD
+			, C.TASK_ID
+			, C.CHECK_ID
+			, C.CHECK_NM
+			, C.CHECK_YN
+		FROM
+			CHECKLIST_MASTER C
+		<where>
+			C.DOMAIN_ID = #{domainId}
+			AND C.TASK_ID = #{taskId}
+		</where>
+		ORDER BY C.CHECK_ORD
+	</select>
+	
+	<delete id="deleteChecklist">
+		DELETE FROM
+			CHECKLIST_MASTER
+		WHERE
+			DOMAIN_ID = #{domainId}
+			AND TASK_ID = #{taskId}
+	</delete>
+	
+</mapper>

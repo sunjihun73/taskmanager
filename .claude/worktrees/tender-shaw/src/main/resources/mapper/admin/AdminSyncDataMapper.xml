@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.admin.AdminSyncDataMapper">
+
+	<delete id="deleteSyncEmpMaster" parameterType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncResponse">
+		DELETE FROM
+			sync_emp_master_${tempDomainId}
+		<where>
+			COMPANY_CD = #{companyCd}
+			AND DOMAIN_ID = #{domainId}
+		</where>
+	</delete>
+		
+	<insert id="insertSyncEmpMaster" parameterType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncResponse" >
+		INSERT INTO 
+			sync_emp_master_${tempDomainId} (
+				SYNC_DATE
+				, DOMAIN_ID
+				, COMPANY_CD
+				, EMAIL
+				, EMP_NM
+				, EMP_ENG_NM
+				, EMP_NO
+				, POS_CD
+				, DEPT_CD
+				, ENTER_DT
+				, QUIT_DT
+				, MANUAL_MNG_YN
+				, HIDDEN_YN
+				, EMP_STATUS_CD
+				, JOB_TEL_NO
+				, MOBILE_TEL_NO
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+		VALUES 
+		<foreach collection="empList" item="item" separator=",">
+		(
+			DATE_FORMAT(now(), '%Y-%m-%d')
+			, #{item.domainName}
+			, #{item.company}
+			, #{item.email}
+			, #{item.name}
+			, #{item.engName}
+			, #{item.empNo}
+			, #{item.positionCode}
+			, #{item.deptCode}
+			, #{item.entryDate}
+			, #{item.quitDate}
+			, #{item.manualMngYn}
+			, #{item.hiddenYn}
+			, #{item.stateStatusCode}
+			, #{item.jobTelNo}
+			, #{item.mobileTelNo}
+			, 'SYSTEM'
+			, now()
+			, 'SYSTEM'
+			, now()
+		)
+		</foreach>
+	</insert>
+	
+	<delete id="deleteSyncDeptMaster" parameterType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncResponse">
+		DELETE FROM
+			sync_dept_master_${tempDomainId}
+		<where>
+			COMPANY_CD = #{companyCd}
+			AND DOMAIN_ID = #{domainId}
+		</where>
+	</delete>
+		
+	<insert id="insertSyncDeptMaster" parameterType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncResponse" >
+		INSERT INTO 
+			sync_dept_master_${tempDomainId} (
+				SYNC_DATE
+				, DOMAIN_ID
+				, COMPANY_CD
+				, DEPT_CD
+				, DEPT_NM
+				, PARENT_DEPT_CD
+				, DEPT_ORD
+				, DEPT_USE_YN
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+		VALUES
+		<foreach collection="deptList" item="item" separator=",">
+		(
+			DATE_FORMAT(now(), '%Y-%m-%d')
+			, #{item.domainName}
+			, #{item.company}
+			, #{item.deptCode}
+			, #{item.deptName}
+			, #{item.parentDeptCode}
+			, #{item.deptOrd}
+			, #{item.useYn}
+			, 'SYSTEM'
+			, now()
+			, 'SYSTEM'
+			, now()
+		)
+		</foreach>
+	</insert>
+	
+	<delete id="deleteSyncCodeDetail" parameterType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncResponse">
+		DELETE FROM
+			sync_code_detail_${tempDomainId}
+		<where>
+			COMPANY_CD = #{companyCd}
+			AND DOMAIN_ID = #{domainId}
+		</where>
+	</delete>
+		
+	<insert id="insertSyncCodeDetail" parameterType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncResponse" >
+		INSERT INTO 
+			sync_code_detail_${tempDomainId} (
+				SYNC_DATE
+				, DOMAIN_ID
+				, COMPANY_CD
+				, CODE_DIV
+				, CODE
+				, CODE_NM
+				, USE_YN
+				, SORT_ORD
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+		VALUES
+		<foreach collection="codeList" item="item" separator=",">
+		(
+			DATE_FORMAT(now(), '%Y-%m-%d')
+			, #{item.domainName}
+			, #{item.company}
+			, #{item.codeDiv}
+			, #{item.code}
+			, #{item.codeName}
+			, #{item.useYn}
+			, #{item.sortOrd}
+			, 'SYSTEM'
+			, now()
+			, 'SYSTEM'
+			, now()
+		)
+		</foreach>
+	</insert>
+	
+	<insert id="insertSyncLog" parameterType="SetSyncLogDTO" useGeneratedKeys="true" keyProperty="seq">
+		INSERT INTO 
+			sync_log_${tempDomainId} (
+				SYNC_DIV
+				, AUTO_DIV
+				, SYNC_DATE
+				, DOMAIN_ID
+				, COMPANY_CD
+				, EMP_SYNC_RESULT
+				, DEPT_SYNC_RESULT
+				, CODE_SYNC_RESULT
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+		VALUES
+		(
+			#{syncDiv}
+			, #{autoDiv}
+			, DATE_FORMAT(now(), '%Y-%m-%d')
+			, #{domainId}
+			, #{companyCd}
+			, #{empSyncResult}
+			, #{deptSyncResult}
+			, #{codeSyncResult}
+			, 'SYSTEM'
+			, now()
+			, 'SYSTEM'
+			, now()
+		)
+	</insert>
+	
+	<select id="getSyncLogs" parameterType="kr.co.dbinc.task.dto.sync.GetSyncLogDTO$GetSyncLogRequest" resultType="kr.co.dbinc.task.dto.sync.GetSyncLogDTO$GetSyncLogResponse">
+		SELECT 
+			S.SEQ
+			, S.SYNC_DIV
+			, S.AUTO_DIV
+			, S.SYNC_DATE
+			, C.COMPANY_NM
+			, S.EMP_SYNC_RESULT
+			, S.DEPT_SYNC_RESULT
+			, S.CODE_SYNC_RESULT
+		FROM
+			sync_log_${tempDomainId} S
+			INNER JOIN COMPANY_MASTER C ON (C.DOMAIN_ID = S.DOMAIN_ID AND C.COMPANY_CD = S.COMPANY_CD)
+		<where>
+			S.DOMAIN_ID = #{domainId}
+			AND S.COMPANY_CD = #{companyCd}
+			<if test="syncDiv != null and syncDiv != ''">
+				AND S.SYNC_DIV = #{syncDiv}
+			</if>
+			<if test="autoDiv != null and autoDiv != ''">
+				AND S.AUTO_DIV = #{autoDiv}
+			</if>
+		</where>
+		ORDER BY 
+			SYNC_DATE DESC
+			, SEQ DESC
+		<if test="length != null and length != ''">
+			LIMIT #{start}, #{length}
+		</if>
+
+	</select>
+	
+	<select id="getSyncLogsCnt" parameterType="kr.co.dbinc.task.dto.sync.GetSyncLogDTO$GetSyncLogRequest" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM
+			sync_log_${tempDomainId} S
+			INNER JOIN COMPANY_MASTER C ON (C.DOMAIN_ID = S.DOMAIN_ID AND C.COMPANY_CD = S.COMPANY_CD)
+		<where>
+			S.DOMAIN_ID = #{domainId}
+			AND S.COMPANY_CD = #{companyCd}
+			<if test="syncDiv != null and syncDiv != ''">
+				AND S.SYNC_DIV = #{syncDiv}
+			</if>
+			<if test="autoDiv != null and autoDiv != ''">
+				AND S.AUTO_DIV = #{autoDiv}
+			</if>
+		</where>
+		ORDER BY SYNC_DATE
+
+	</select>
+	
+	<select id="getNewSyncLog" parameterType="kr.co.dbinc.task.dto.sync.EpSyncDTO$EpSyncRequest" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM (
+			SELECT *
+			FROM
+				sync_log_${tempDomainId}
+			<where>
+				DOMAIN_ID = #{domainId}
+				AND COMPANY_CD = #{companyCd}
+				AND SYNC_DATE = DATE_FORMAT(now(), '%Y-%m-%d')
+				AND SYNC_DIV = 'TOSYNC'
+			</where>
+			ORDER BY CREATE_DT DESC
+			LIMIT 1
+		) A
+		<where>
+			A.EMP_SYNC_RESULT = 'S' AND A.DEPT_SYNC_RESULT = 'S' AND A.CODE_SYNC_RESULT = 'S'
+		</where>
+	</select>
+
+</mapper>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.task.TaskLabelMapper">
+	<select id="getTaskLabels" resultType="GetTaskLabelResponse">
+		SELECT
+			TL.TASK_ID
+			, TL.LABEL_ID
+			, LM.LABEL_NM
+		FROM
+			TASK_LABEL TL
+			INNER JOIN LABEL_MASTER LM ON (
+			    TL.DOMAIN_ID = LM.DOMAIN_ID
+			    and TL.COMPANY_CD = LM.COMPANY_CD
+			    and TL.LABEL_ID = LM.LABEL_ID
+			)
+		<where>
+			TL.DOMAIN_ID = #{domainId}
+			AND TL.TASK_ID = #{taskId}
+			AND TL.EMAIL = #{email}
+		</where>
+	</select>
+	
+	<insert id="insertTaskLabel">
+		INSERT
+			TASK_LABEL (
+				DOMAIN_ID
+				, COMPANY_CD
+				, TASK_ID
+				, LABEL_ID
+				, EMAIL
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+			VALUES (
+				#{domainId}
+				, #{companyCd}
+				, #{taskId}
+				, #{labelId}
+				, #{email}
+				, #{email}
+				, NOW()
+				, #{email}
+				, NOW()
+			)
+	</insert>
+	
+	<delete id="deleteTaskLabel">
+		DELETE FROM
+			TASK_LABEL
+		WHERE
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND TASK_ID = #{taskId}
+			AND EMAIL = #{email}
+	</delete>
+	
+	<delete id="deleteTaskLabelAll">
+		DELETE FROM
+			TASK_LABEL
+		WHERE
+			DOMAIN_ID = #{domainId}
+			AND TASK_ID = #{taskId}
+	</delete>
+	
+	<delete id="deleteLabel">
+		DELETE FROM
+			TASK_LABEL
+		WHERE
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND LABEL_ID = #{labelId}
+			AND EMAIL = #{email}
+	</delete>
+
+</mapper>

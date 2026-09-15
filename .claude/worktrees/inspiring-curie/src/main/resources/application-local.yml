@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://cmmndevmysql.mysql.database.azure.com:3306/cloudoffice_task_mng?serverTimezone=UTC&allowMultiQueries=true&characterEncoding=UTF-8&useSSL=false
+    hikari:
+      username: cloudporteadmin
+      password: admin1234!@#$
+      maximum-pool-size: 12
+      max-lifetime: 170000
+
+storageAccountName: cloudofficeadminstrg
+storageConnectionString: DefaultEndpointsProtocol=https;AccountName=cloudofficeadminstrg;AccountKey=+qbTd4Hvv2D4yfBal1v3OlXMa/z71lE1+V/rLZDxery9x+fqPVEyMf1/YlM4SA2kxo/MYZAFhu5h+Mg72gtJig==;EndpointSuffix=core.windows.net
+storageContainerName: cloudofficetaskmanager-container
+
+mailgun:
+  baseUrl: https://api.mailgun.net
+  apikey: key-dab8ee31abdc26b6b24ad60e807f768b
+  apiurl: https://api.mailgun.net/v3/mg.cloud-office.co.kr
+  sender: 'TaskManagerSystem. <postmaster@mg.cloud-office.co.kr>'
+  domain: mg.cloud-office.co.kr
+  mailTemplate: mail_template2.tpl
+
+logging:
+  config: classpath:log4j2/log4j2-local.xml
+
+keyFileName: ep-cloud-secret.json
+googleServiceId: taskmanager@dbinc.co.kr
+
+system:
+  url: http://localhost:8080/

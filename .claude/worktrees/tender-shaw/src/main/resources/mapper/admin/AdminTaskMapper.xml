@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.admin.AdminTaskMapper">
+	
+	<select id="getTasksForAdmin" parameterType="GetTaskListRequest" resultType="kr.co.dbinc.task.dto.task.GetTaskDTO$GetTaskResponse">
+		SELECT DISTINCT
+			T.DOMAIN_ID
+			, T.COMPANY_CD
+			, T.TASK_ID
+			, T.TASK_NM
+			, T.TASK_DETAIL
+			, SF_GET_CODE_NM('ko-KR', 'CM001', T.TASK_STATE_CD, T.COMPANY_CD, T.DOMAIN_ID) AS TASK_STATE
+			, T.TASK_START_DT
+			, T.TASK_END_DT
+			, SF_GET_CODE_NM('ko-KR', 'CM002', T.TASK_IMPORTANCE_CD, T.COMPANY_CD, T.DOMAIN_ID) AS TASK_IMPORTANCE
+			, T.TASK_OWNER_MEMBER_ID
+			, T.TASK_PROGRESS
+			, T.CHILD_TASK_ADD_YN
+			, C.COMPANY_NM EMP_COMPANY_NM
+			, E.EMP_NM
+			, T.PARENT_TASK_ID
+		    , T.TASK_TYPE_CD
+            , SF_GET_CODE_NM('ko-KR', 'CM007', T.TASK_TYPE_CD, T.COMPANY_CD, T.DOMAIN_ID) AS TASK_TYPE_NM
+		FROM
+			TASK_MASTER T
+			LEFT JOIN EMP_MASTER E ON (E.EMAIL = T.TASK_OWNER_MEMBER_ID AND E.DOMAIN_ID = T.DOMAIN_ID AND E.COMPANY_CD = T.COMPANY_CD)
+			INNER JOIN COMPANY_MASTER C ON (C.DOMAIN_ID = E.DOMAIN_ID AND C.COMPANY_CD = E.COMPANY_CD)
+			INNER JOIN TASK_EMP TE2 ON (TE2.TASK_ID = T.TASK_ID AND TE2.DOMAIN_ID = T.DOMAIN_ID)
+ 			INNER JOIN EMP_MASTER E2  ON (TE2.EMAIL = E2.EMAIL AND E2.DOMAIN_ID = TE2.DOMAIN_ID AND E2.COMPANY_CD = TE2.COMPANY_CD)
+		<where>
+			T.DOMAIN_ID = #{domainId}
+			AND (T.DEL_YN = 'N' OR T.DEL_YN IS NULL)
+			<if test="taskState != null and taskState != ''">
+				AND T.TASK_STATE_CD = #{taskState}
+			</if>
+			<if test="taskEmpNm != null and taskEmpNm != ''">
+				AND E2.EMP_NM LIKE REPLACE(CONCAT('%', #{taskEmpNm}, '%'), ' ','')
+			</if>
+			<if test="taskNm != null and taskNm != ''">
+				AND T.TASK_NM LIKE REPLACE(CONCAT('%', #{taskNm}, '%'), ' ','')
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+			<if test="taskStartDt != null and taskStartDt != ''">
+				AND T.TASK_START_DT >= #{taskStartDt}
+			</if>
+			<if test="taskEndDt != null and taskEndDt != ''">
+				AND T.TASK_END_DT  <![CDATA[<=]]> #{taskEndDt}
+			</if>
+			AND T.TASK_ID NOT IN (
+				SELECT
+					T.TASK_ID
+				FROM 
+					TASK_MASTER T
+					LEFT JOIN EMP_MASTER E ON (E.EMAIL = T.TASK_OWNER_MEMBER_ID AND E.DOMAIN_ID = T.DOMAIN_ID AND E.COMPANY_CD = T.COMPANY_CD)
+   				WHERE
+   					T.DOMAIN_ID = #{domainId}
+   					AND (T.DEL_YN = 'N' OR T.DEL_YN IS NULL)
+   					AND T.PARENT_TASK_ID IN (
+	   					SELECT
+	   						T.TASK_ID
+						FROM
+							TASK_MASTER T
+							LEFT JOIN EMP_MASTER E ON (E.EMAIL = T.TASK_OWNER_MEMBER_ID AND E.DOMAIN_ID = T.DOMAIN_ID AND E.COMPANY_CD = T.COMPANY_CD)
+							INNER JOIN TASK_EMP TE2 ON (TE2.TASK_ID = T.TASK_ID AND TE2.DOMAIN_ID = T.DOMAIN_ID)
+ 							INNER JOIN EMP_MASTER E2  ON (TE2.EMAIL = E2.EMAIL AND E2.DOMAIN_ID = TE2.DOMAIN_ID AND E2.COMPANY_CD = TE2.COMPANY_CD)
+		   				WHERE 
+		   					T.DOMAIN_ID = #{domainId}
+		   					AND (T.DEL_YN = 'N' OR T.DEL_YN IS NULL)
+			 				<if test="taskState != null and taskState != ''">
+								AND T.TASK_STATE_CD = #{taskState}
+							</if>
+		   					<if test="taskEmpNm != null and taskEmpNm != ''">
+								AND E2.EMP_NM LIKE REPLACE(CONCAT('%', #{taskEmpNm}, '%'), ' ','')
+							</if>
+							<if test="taskNm != null and taskNm != ''">
+								AND T.TASK_NM LIKE REPLACE(CONCAT('%', #{taskNm}, '%'), ' ','')
+							</if>
+							<if test="empNm != null and empNm != ''">
+								AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+							</if>
+							<if test="taskStartDt != null and taskStartDt != ''">
+								AND T.TASK_START_DT >= #{taskStartDt}
+							</if>
+							<if test="taskEndDt != null and taskEndDt != ''">
+								AND T.TASK_END_DT  <![CDATA[<=]]> #{taskEndDt}
+							</if>
+   					)  
+			)
+		</where>
+		ORDER BY
+			T.TASK_STATE_CD,
+			CASE WHEN T.TASK_END_DT is NULL THEN '2'
+			     WHEN T.TASK_END_DT = '' THEN '1'
+			     ELSE '0' END,
+			T.TASK_END_DT, T.TASK_IMPORTANCE_CD, 
+			COALESCE(T.PARENT_TASK_ID, T.TASK_ID), T.PARENT_TASK_ID IS NOT NULL, T.TASK_ID
+		<if test="length != null and length != ''">
+			LIMIT #{start}, #{length}
+		</if>
+
+	</select>
+	
+	<select id="getTasksForAdminCnt" parameterType="GetTaskListRequest" resultType="int">
+		SELECT 
+			COUNT(DISTINCT T.TASK_ID)
+		FROM
+			TASK_MASTER T
+			LEFT JOIN EMP_MASTER E ON (E.EMAIL = T.TASK_OWNER_MEMBER_ID AND E.DOMAIN_ID = T.DOMAIN_ID AND E.COMPANY_CD = T.COMPANY_CD)
+			INNER JOIN COMPANY_MASTER C ON (C.DOMAIN_ID = E.DOMAIN_ID AND C.COMPANY_CD = E.COMPANY_CD)
+			INNER JOIN TASK_EMP TE2 ON (TE2.TASK_ID = T.TASK_ID AND TE2.DOMAIN_ID = T.DOMAIN_ID)
+ 			INNER JOIN EMP_MASTER E2  ON (TE2.EMAIL = E2.EMAIL AND E2.DOMAIN_ID = TE2.DOMAIN_ID AND E2.COMPANY_CD = TE2.COMPANY_CD)
+		<where>
+			T.DOMAIN_ID = #{domainId}
+			AND (T.DEL_YN = 'N' OR T.DEL_YN IS NULL)
+			<if test="taskState != null and taskState != ''">
+				AND T.TASK_STATE_CD = #{taskState}
+			</if>
+			<if test="taskEmpNm != null and taskEmpNm != ''">
+				AND E2.EMP_NM LIKE REPLACE(CONCAT('%', #{taskEmpNm}, '%'), ' ','')
+			</if>
+			<if test="taskNm != null and taskNm != ''">
+				AND T.TASK_NM LIKE REPLACE(CONCAT('%', #{taskNm}, '%'), ' ','')
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+			<if test="taskStartDt != null and taskStartDt != ''">
+				AND T.TASK_START_DT >= #{taskStartDt}
+			</if>
+			<if test="taskEndDt != null and taskEndDt != ''">
+				AND T.TASK_END_DT  <![CDATA[<=]]> #{taskEndDt}
+			</if>
+			AND T.TASK_ID NOT IN (
+				SELECT
+					T.TASK_ID
+				FROM 
+					TASK_MASTER T
+					LEFT JOIN EMP_MASTER E ON (E.EMAIL = T.TASK_OWNER_MEMBER_ID AND E.DOMAIN_ID = T.DOMAIN_ID AND E.COMPANY_CD = T.COMPANY_CD) 
+   				WHERE
+   					T.DOMAIN_ID = #{domainId}
+   					AND (T.DEL_YN = 'N' OR T.DEL_YN IS NULL)
+   					AND T.PARENT_TASK_ID IN (
+	   					SELECT
+	   						T.TASK_ID
+						FROM
+							TASK_MASTER T
+							LEFT JOIN EMP_MASTER E ON (E.EMAIL = T.TASK_OWNER_MEMBER_ID AND E.DOMAIN_ID = T.DOMAIN_ID AND E.COMPANY_CD = T.COMPANY_CD)
+							INNER JOIN TASK_EMP TE2 ON (TE2.TASK_ID = T.TASK_ID AND TE2.DOMAIN_ID = T.DOMAIN_ID)
+ 							INNER JOIN EMP_MASTER E2  ON (TE2.EMAIL = E2.EMAIL AND E2.DOMAIN_ID = TE2.DOMAIN_ID AND E2.COMPANY_CD = TE2.COMPANY_CD)
+		   				WHERE 
+		   					T.DOMAIN_ID = #{domainId}
+		   					AND (T.DEL_YN = 'N' OR T.DEL_YN IS NULL)
+			 				<if test="taskState != null and taskState != ''">
+								AND T.TASK_STATE_CD = #{taskState}
+							</if>
+							<if test="taskEmpNm != null and taskEmpNm != ''">
+								AND E2.EMP_NM LIKE REPLACE(CONCAT('%', #{taskEmpNm}, '%'), ' ','')
+							</if>
+							<if test="taskNm != null and taskNm != ''">
+								AND T.TASK_NM LIKE REPLACE(CONCAT('%', #{taskNm}, '%'), ' ','')
+							</if>
+							<if test="empNm != null and empNm != ''">
+								AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+							</if>
+							<if test="taskStartDt != null and taskStartDt != ''">
+								AND T.TASK_START_DT >= #{taskStartDt}
+							</if>
+							<if test="taskEndDt != null and taskEndDt != ''">
+								AND T.TASK_END_DT  <![CDATA[<=]]> #{taskEndDt}
+							</if>
+   					)  
+			)
+		</where>
+	</select>
+	
+	<select id="getTasksOnlyChildForAdmin" parameterType="kr.co.dbinc.task.dto.task.GetTaskDTO$GetTaskResponse" resultType="kr.co.dbinc.task.dto.task.GetTaskDTO$GetTaskResponse">
+		SELECT DISTINCT
+			T.DOMAIN_ID
+			, T.COMPANY_CD
+			, T.TASK_ID
+			, T.TASK_NM
+			, T.TASK_DETAIL
+			, SF_GET_CODE_NM('ko-KR', 'CM001', T.TASK_STATE_CD, T.COMPANY_CD, T.DOMAIN_ID) AS TASK_STATE
+			, T.TASK_START_DT
+			, T.TASK_END_DT
+			, SF_GET_CODE_NM('ko-KR', 'CM002', T.TASK_IMPORTANCE_CD, T.COMPANY_CD, T.DOMAIN_ID) AS TASK_IMPORTANCE
+			, T.TASK_OWNER_MEMBER_ID
+			, T.TASK_PROGRESS
+			, T.CHILD_TASK_ADD_YN
+			, C.COMPANY_NM EMP_COMPANY_NM
+			, E.EMP_NM
+			, TE.TASK_EMP_CD
+			, SF_GET_CODE_NM('ko-KR', 'CM004', TE.TASK_EMP_CD, T.COMPANY_CD, T.DOMAIN_ID) AS TASK_EMP
+			, TT.TASK_NM AS PARENT_TASK_NM
+			, T.PARENT_TASK_ID
+			, 'Y' AS CHILD_YN
+            , T.TASK_TYPE_CD
+            , SF_GET_CODE_NM('ko-KR', 'CM007', T.TASK_TYPE_CD, T.COMPANY_CD, T.DOMAIN_ID) AS TASK_TYPE_NM
+		FROM
+			TASK_MASTER T
+			INNER JOIN TASK_EMP TE ON (TE.TASK_ID = T.TASK_ID AND TE.DOMAIN_ID = T.DOMAIN_ID)
+			LEFT JOIN EMP_MASTER E ON (E.EMAIL = T.TASK_OWNER_MEMBER_ID AND E.DOMAIN_ID = T.DOMAIN_ID AND E.COMPANY_CD = T.COMPANY_CD)
+			INNER JOIN COMPANY_MASTER C ON (C.DOMAIN_ID = E.DOMAIN_ID AND C.COMPANY_CD = E.COMPANY_CD)
+			LEFT JOIN TASK_MASTER TT ON (TT.TASK_ID = T.PARENT_TASK_ID AND TT.DOMAIN_ID = T.DOMAIN_ID AND TT.COMPANY_CD = T.COMPANY_CD)
+			LEFT JOIN TASK_LABEL TL ON (TL.TASK_ID = T.TASK_ID AND TL.DOMAIN_ID = T.DOMAIN_ID)
+		<where>
+			T.DOMAIN_ID = #{domainId}
+			AND T.CHILD_TASK_ADD_YN = 'N'
+			AND T.PARENT_TASK_ID = #{taskId}
+			AND (T.DEL_YN = 'N' OR T.DEL_YN IS NULL)
+		</where>
+		GROUP BY T.TASK_ID
+		ORDER BY
+			CASE WHEN T.TASK_END_DT is NULL THEN '2'
+			     WHEN T.TASK_END_DT = '' THEN '1'
+			     ELSE '0' END, 
+			T.TASK_END_DT, T.TASK_IMPORTANCE_CD,
+			COALESCE(T.PARENT_TASK_ID, T.TASK_ID), T.PARENT_TASK_ID IS NOT NULL, T.TASK_ID
+
+	</select>
+	
+</mapper>

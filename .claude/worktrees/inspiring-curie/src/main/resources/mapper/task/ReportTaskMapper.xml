@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.task.ReportTaskMapper">
+	<sql id="sqlFetchNextStatement">
+        <if test="length != null and length != ''">
+        <![CDATA[
+            LIMIT ${start} , ${length}
+        ]]>
+        </if>
+    </sql>
+    
+    <select id="selectReportTaskMaster" parameterType="Map" resultType="SelectReportTaskDTO">
+    	SELECT
+			a.DOMAIN_ID
+			, a.COMPANY_CD
+			, b.COMPANY_NM
+			, a.TASK_ID
+			, a.TASK_TITLE
+			, a.TASK_DETAIL
+			, a.TASK_STATE_CD
+			, SF_GET_CODE_NM('ko-KR', 'CM005', a.TASK_STATE_CD, a.COMPANY_CD, a.DOMAIN_ID) AS TASK_STATE_NM
+			, a.TASK_DT
+			, a.TASK_OWNER_MEMBER_ID
+    	    , a.TASK_RECEIVER_MEMBER_ID
+    	    , SF_GET_MEMBER_NAME(a.TASK_RECEIVER_MEMBER_ID) AS TASK_RECEIVER_MEMBER_NM
+			, a.TASK_REVIEW_CONTENT
+			, a.TASK_REVIEW_DT
+			, a.DEL_YN
+			, a.UPDATE_USR
+			, a.UPDATE_DT
+			, a.CREATE_USR
+			, a.CREATE_DT
+			, c.EMP_NM 			AS TASK_OWNER_MEMBER_NM
+			, c.EMP_ENG_NM 		AS TASK_OWNER_MEMBER_ENG_NM
+			, c.COMPANY_CD 		AS TASK_OWNER_MEMBER_COMPANY_CD
+			<if test="email != null and email != ''">
+			, d.TASK_EMP_CD
+			, SF_GET_CODE_NM('ko-KR', 'CM005', d.TASK_EMP_CD, d.COMPANY_CD, d.DOMAIN_ID) AS TASK_EMP_NM
+			, d.TASK_EMP_REVIEW_DT
+			</if>
+    	FROM
+    		REPORT_TASK_MASTER a
+    		INNER JOIN COMPANY_MASTER b ON (a.DOMAIN_ID = b.DOMAIN_ID AND a.COMPANY_CD = b.COMPANY_CD)
+    		INNER JOIN EMP_MASTER c ON (a.DOMAIN_ID = c.DOMAIN_ID AND a.COMPANY_CD = c.COMPANY_CD AND a.TASK_OWNER_MEMBER_ID = c.EMAIL)
+    		<if test="email != null and email != ''">
+    		INNER JOIN REPORT_TASK_EMP d ON (a.DOMAIN_ID = d.DOMAIN_ID AND a.TASK_ID = d.TASK_ID)
+    		</if>
+    	WHERE
+    		a.TASK_ID = #{taskId}
+    		AND a.DOMAIN_ID = #{domainId}
+    		AND a.DEL_YN = #{delYn}
+    		<if test="email != null and email != ''">
+				AND d.EMAIL = #{email}
+			</if>
+    </select>
+    
+    <select id="selectReportTaskMastersCnt" parameterType="Map" resultType="int">
+    	SELECT
+			COUNT(*) AS CNT	
+    	FROM
+    		REPORT_TASK_MASTER a
+    	WHERE
+    		a.TASK_OWNER_MEMBER_ID = #{taskOwnerMemberId}
+    		AND a.DOMAIN_ID = #{domainId}
+    		AND a.COMPANY_CD = #{companyCd}		
+    		AND a.TASK_STATE_CD = #{taskStateCd}
+    		AND a.DEL_YN = #{delYn}
+    		
+		<if test="taskTitle != null and taskTitle != ''">
+			AND a.TASK_TITLE LIKE REPLACE(CONCAT('%', #{taskTitle}, '%'), ' ','')
+		</if>
+			 
+		<if test="fromDt != null and fromDt != ''">
+			AND a.TASK_DT <![CDATA[>=]]> #{fromDt}
+		</if>
+		
+		<if test="toDt != null and toDt != ''">
+			AND a.TASK_DT  <![CDATA[<=]]> #{toDt}
+		</if>			 
+    </select>      
+    
+    <select id="getReportTaskEmpList" parameterType="Map" resultType="GetTaskEmpListResponse">
+		SELECT
+			TE.DOMAIN_ID
+			, TE.COMPANY_CD
+			, TE.TASK_ID
+			, TE.EMAIL
+			, TE.TASK_EMP_CD
+			, E.EMP_NM
+		FROM
+			REPORT_TASK_EMP TE
+			INNER JOIN REPORT_TASK_MASTER T ON (TE.TASK_ID = T.TASK_ID AND TE.DOMAIN_ID = T.DOMAIN_ID)
+			INNER JOIN EMP_MASTER E ON (E.EMAIL = TE.EMAIL AND E.DOMAIN_ID = TE.DOMAIN_ID AND E.COMPANY_CD = TE.COMPANY_CD)
+		<where>
+			TE.TASK_ID = #{taskId}
+		</where>
+	</select>
+    
+    <select id="selectReportTaskMasters" parameterType="Map" resultType="SelectReportTaskDTO">
+    	SELECT
+			a.DOMAIN_ID
+			, a.COMPANY_CD
+			, b.COMPANY_NM
+			, a.TASK_ID
+			, a.TASK_TITLE
+			, a.TASK_DETAIL
+			, a.TASK_STATE_CD
+			, SF_GET_CODE_NM('ko-KR', 'CM005', a.TASK_STATE_CD, a.COMPANY_CD, a.DOMAIN_ID) AS TASK_STATE_NM
+			, a.TASK_DT
+			, a.TASK_OWNER_MEMBER_ID
+			, a.TASK_REVIEW_CONTENT
+			, a.TASK_REVIEW_DT
+			, a.DEL_YN
+			, a.UPDATE_USR
+			, a.UPDATE_DT
+			, a.CREATE_USR
+			, a.CREATE_DT
+			, c.EMP_NM 			AS TASK_OWNER_MEMBER_NM
+			, c.EMP_ENG_NM 		AS TASK_OWNER_MEMBER_ENG_NM		
+    	FROM
+    		REPORT_TASK_MASTER a
+    		INNER JOIN COMPANY_MASTER b ON (a.DOMAIN_ID = b.DOMAIN_ID AND a.COMPANY_CD = b.COMPANY_CD)
+    		INNER JOIN EMP_MASTER c ON (a.DOMAIN_ID = c.DOMAIN_ID AND a.COMPANY_CD = c.COMPANY_CD AND a.TASK_OWNER_MEMBER_ID = c.EMAIL)
+    	WHERE
+    		a.TASK_OWNER_MEMBER_ID = #{taskOwnerMemberId}
+    		AND a.DOMAIN_ID = #{domainId}
+    		AND a.COMPANY_CD = #{companyCd}		
+    		AND a.TASK_STATE_CD = #{taskStateCd}
+    		AND a.DEL_YN = #{delYn}
+    		
+		<if test="taskTitle != null and taskTitle != ''">
+			AND a.TASK_TITLE LIKE REPLACE(CONCAT('%', #{taskTitle}, '%'), ' ','')
+		</if>
+			 
+		<if test="fromDt != null and fromDt != ''">
+			AND a.TASK_DT <![CDATA[>=]]> #{fromDt}
+		</if>
+		
+		<if test="toDt != null and toDt != ''">
+			AND a.TASK_DT  <![CDATA[<=]]> #{toDt}
+		</if>			 
+			    		
+    	ORDER BY
+		 	a.TASK_DT DESC
+		<include refid="sqlFetchNextStatement"></include>    		
+    </select>    
+    
+
+
+    <select id="selectSendReportTaskMastersCnt" parameterType="Map" resultType="int">
+    	SELECT
+			COUNT(*) AS CNT	
+    	FROM
+    		REPORT_TASK_MASTER a
+    	WHERE
+    		a.TASK_OWNER_MEMBER_ID = #{taskOwnerMemberId}
+    		AND a.DOMAIN_ID = #{domainId}
+    		AND a.COMPANY_CD = #{companyCd}		
+    		AND a.TASK_STATE_CD IN ('CM005CD002', 'CM005CD003')
+    		AND a.DEL_YN = #{delYn}
+    		
+		<if test="taskTitle != null and taskTitle != ''">
+			AND a.TASK_TITLE LIKE REPLACE(CONCAT('%', #{taskTitle}, '%'), ' ','')
+		</if>
+    		
+		<if test="taskStateCd != null and taskStateCd != ''">
+			AND a.TASK_STATE_CD = #{taskStateCd}
+		</if>
+			 
+		<if test="fromDt != null and fromDt != ''">
+			AND a.TASK_DT <![CDATA[>=]]> #{fromDt}
+		</if>
+		
+		<if test="toDt != null and toDt != ''">
+			AND a.TASK_DT  <![CDATA[<=]]> #{toDt}
+		</if>			 
+    </select> 
+
+    <select id="selectSendReportTaskMasters" parameterType="Map" resultType="SelectReportTaskDTO">
+    	SELECT
+			a.DOMAIN_ID
+			, a.COMPANY_CD
+			, b.COMPANY_NM
+			, a.TASK_ID
+			, a.TASK_TITLE
+			, a.TASK_DETAIL
+			, a.TASK_STATE_CD
+			, SF_GET_CODE_NM('ko-KR', 'CM005', a.TASK_STATE_CD, a.COMPANY_CD, a.DOMAIN_ID) AS TASK_STATE_NM
+			, a.TASK_DT
+			, a.TASK_OWNER_MEMBER_ID
+			, a.TASK_REVIEW_CONTENT
+			, a.TASK_REVIEW_DT
+			, a.DEL_YN
+			, a.UPDATE_USR
+			, a.UPDATE_DT
+			, a.CREATE_USR
+			, a.CREATE_DT
+			, c.EMP_NM 			AS TASK_OWNER_MEMBER_NM
+			, c.EMP_ENG_NM 		AS TASK_OWNER_MEMBER_ENG_NM		
+    	FROM
+    		REPORT_TASK_MASTER a
+    		INNER JOIN COMPANY_MASTER b ON (a.DOMAIN_ID = b.DOMAIN_ID AND a.COMPANY_CD = b.COMPANY_CD)
+    		INNER JOIN EMP_MASTER c ON (a.DOMAIN_ID = c.DOMAIN_ID AND a.COMPANY_CD = c.COMPANY_CD AND a.TASK_OWNER_MEMBER_ID = c.EMAIL)
+    	WHERE
+    		a.TASK_OWNER_MEMBER_ID = #{taskOwnerMemberId}
+    		AND a.DOMAIN_ID = #{domainId}
+    		AND a.COMPANY_CD = #{companyCd}		
+    		AND a.TASK_STATE_CD IN ('CM005CD002', 'CM005CD003')
+    		AND a.DEL_YN = #{delYn}
+    		
+		<if test="taskTitle != null and taskTitle != ''">
+			AND a.TASK_TITLE LIKE REPLACE(CONCAT('%', #{taskTitle}, '%'), ' ','')
+		</if>
+		
+		<if test="taskStateCd != null and taskStateCd != ''">
+			AND a.TASK_STATE_CD = #{taskStateCd}
+		</if>		
+			 
+		<if test="fromDt != null and fromDt != ''">
+			AND a.TASK_DT <![CDATA[>=]]> #{fromDt}
+		</if>
+		
+		<if test="toDt != null and toDt != ''">
+			AND a.TASK_DT  <![CDATA[<=]]> #{toDt}
+		</if>			 
+			    		
+    	ORDER BY
+		 	a.TASK_DT DESC
+		<include refid="sqlFetchNextStatement"></include>    		
+    </select> 
+
+
+
+
+
+    <select id="selectRecvReportTaskMastersCnt" parameterType="Map" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+		(    
+	    	SELECT
+				a.DOMAIN_ID
+				, a.COMPANY_CD
+				, a.TASK_ID
+				, c.EMP_NM 			AS TASK_OWNER_MEMBER_NM
+	    	FROM
+	    		REPORT_TASK_MASTER a
+	    		INNER JOIN EMP_MASTER c ON (a.DOMAIN_ID = c.DOMAIN_ID AND a.COMPANY_CD = c.COMPANY_CD AND a.TASK_OWNER_MEMBER_ID = c.EMAIL)
+	    		INNER JOIN REPORT_TASK_EMP d ON (a.DOMAIN_ID = d.DOMAIN_ID AND a.TASK_ID = d.TASK_ID)
+	    	WHERE
+	    		d.EMAIL = #{taskReceiverMemberId}
+	    		AND a.DOMAIN_ID = #{domainId}
+	    		AND a.TASK_STATE_CD IN ('CM005CD002', 'CM005CD003')
+	    		AND a.DEL_YN = #{delYn}
+	    		
+			<if test="taskTitle != null and taskTitle != ''">
+				AND a.TASK_TITLE LIKE REPLACE(CONCAT('%', #{taskTitle}, '%'), ' ','')
+			</if>
+			
+			<if test="taskStateCd != null and taskStateCd != ''">
+				AND d.TASK_EMP_CD = #{taskStateCd}
+			</if>
+				 
+			<if test="fromDt != null and fromDt != ''">
+				AND a.TASK_DT <![CDATA[>=]]> #{fromDt}
+			</if>
+			
+			<if test="toDt != null and toDt != ''">
+				AND a.TASK_DT  <![CDATA[<=]]> #{toDt}
+			</if>	
+		) T
+		<where>
+			<if test="taskOnwerMemberNm != null and taskOnwerMemberNm != ''">
+				AND T.TASK_OWNER_MEMBER_NM LIKE REPLACE(CONCAT('%', #{taskOnwerMemberNm}, '%'), ' ','')
+			</if>	
+		</where>			 
+    </select> 
+
+    <select id="selectRecvReportTaskMasters" parameterType="Map" resultType="SelectReportTaskDTO">
+	    SELECT
+	    	T.*
+	    FROM
+	    (
+	    	SELECT
+				a.DOMAIN_ID
+				, a.COMPANY_CD
+				, b.COMPANY_NM
+				, a.TASK_ID
+				, a.TASK_TITLE
+				, a.TASK_DETAIL
+				, a.TASK_STATE_CD
+				, SF_GET_CODE_NM('ko-KR', 'CM005', a.TASK_STATE_CD, a.COMPANY_CD, a.DOMAIN_ID) AS TASK_STATE_NM
+				, a.TASK_DT
+				, a.TASK_OWNER_MEMBER_ID
+				, a.TASK_REVIEW_CONTENT
+				, a.TASK_REVIEW_DT
+				, a.DEL_YN
+				, a.UPDATE_USR
+				, a.UPDATE_DT
+				, a.CREATE_USR
+				, a.CREATE_DT
+				, c.EMP_NM 			AS TASK_OWNER_MEMBER_NM
+				, c.EMP_ENG_NM 		AS TASK_OWNER_MEMBER_ENG_NM
+				, e.EMP_NM 			AS TASK_RECEIVER_MEMBER_NM
+				, e.EMP_ENG_NM 		AS TASK_RECEIVER_MEMBER_ENG_NM
+				, d.TASK_EMP_CD
+				, SF_GET_CODE_NM('ko-KR', 'CM005', d.TASK_EMP_CD, d.COMPANY_CD, d.DOMAIN_ID) AS TASK_EMP_NM
+				, d.TASK_EMP_REVIEW_DT
+	    	FROM
+	    		REPORT_TASK_MASTER a
+	    		INNER JOIN COMPANY_MASTER b ON (a.DOMAIN_ID = b.DOMAIN_ID AND a.COMPANY_CD = b.COMPANY_CD)
+	    		INNER JOIN EMP_MASTER c ON (a.DOMAIN_ID = c.DOMAIN_ID AND a.COMPANY_CD = c.COMPANY_CD AND a.TASK_OWNER_MEMBER_ID = c.EMAIL)
+	    		INNER JOIN REPORT_TASK_EMP d ON (a.DOMAIN_ID = d.DOMAIN_ID AND a.TASK_ID = d.TASK_ID)
+	    		INNER JOIN EMP_MASTER e ON (d.DOMAIN_ID = e.DOMAIN_ID AND d.COMPANY_CD = e.COMPANY_CD AND d.EMAIL = e.EMAIL)
+	    	WHERE
+	    		d.EMAIL = #{taskReceiverMemberId}
+	    		AND a.DOMAIN_ID = #{domainId}
+	    		AND a.TASK_STATE_CD IN ('CM005CD002', 'CM005CD003')
+	    		AND a.DEL_YN = #{delYn}
+	    		
+			<if test="taskTitle != null and taskTitle != ''">
+				AND a.TASK_TITLE LIKE REPLACE(CONCAT('%', #{taskTitle}, '%'), ' ','')
+			</if>
+			
+			<if test="taskStateCd != null and taskStateCd != ''">
+				AND d.TASK_EMP_CD = #{taskStateCd}
+			</if>		
+				 
+			<if test="fromDt != null and fromDt != ''">
+				AND a.TASK_DT <![CDATA[>=]]> #{fromDt}
+			</if>
+			
+			<if test="toDt != null and toDt != ''">
+				AND a.TASK_DT  <![CDATA[<=]]> #{toDt}
+			</if>			 
+				    		
+	    	ORDER BY
+			 	a.TASK_DT DESC
+			<include refid="sqlFetchNextStatement"></include> 
+		) T
+		<where>
+			<if test="taskOnwerMemberNm != null and taskOnwerMemberNm != ''">
+				AND T.TASK_OWNER_MEMBER_NM LIKE REPLACE(CONCAT('%', #{taskOnwerMemberNm}, '%'), ' ','')
+			</if>	
+		</where>
+	   		
+    </select> 
+
+
+
+
+
+
+
+    
+    
+	<insert id="insertReportTaskMaster" parameterType="InsertReportTaskDTO">
+		INSERT REPORT_TASK_MASTER (
+			DOMAIN_ID
+			, COMPANY_CD
+			, TASK_ID
+			, TASK_TITLE
+			, TASK_DETAIL
+			, TASK_STATE_CD
+			, TASK_DT
+			, TASK_OWNER_MEMBER_ID
+			, TASK_REVIEW_CONTENT
+			, DEL_YN
+			, UPDATE_USR
+			, UPDATE_DT
+			, CREATE_USR
+			, CREATE_DT
+		)
+		VALUES (
+			#{domainId}
+			, #{companyCd}
+			, #{taskId}
+			, #{taskTitle}
+			, #{taskDetail}
+			, #{taskStateCd}
+			, #{taskDt}
+			, #{taskOwnerMemberId}
+			, #{taskReviewContent}
+			, #{delYn}
+			, #{updateUsr}
+			, NOW()
+			, #{createUsr}
+			, NOW()
+		)
+	</insert>
+	
+	<insert id="insertReportTaskEmp">
+		INSERT
+			REPORT_TASK_EMP (
+				DOMAIN_ID
+				, COMPANY_CD
+				, EMAIL
+				, TASK_ID
+				, TASK_EMP_CD
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+			VALUES (
+				#{domainId}
+				, #{companyCd}
+				, #{email}
+				, #{taskId}
+				, #{taskEmpCd}
+				, #{createUsr}
+				, NOW()
+				, #{createUsr}
+				, NOW()
+			)
+		
+	</insert>
+	
+	<update id="updateReportTaskMaster" parameterType="InsertReportTaskDTO">
+		UPDATE REPORT_TASK_MASTER
+		<set>
+			TASK_TITLE 					= #{taskTitle}
+			, TASK_DETAIL 				= #{taskDetail}
+			, TASK_DT 					= #{taskDt}
+			, TASK_OWNER_MEMBER_ID 		= #{taskOwnerMemberId}
+ 			, TASK_RECEIVER_MEMBER_ID 	= #{taskReceiverMemberId}
+			
+			<if test="taskReviewContent != null and taskReviewContent != ''">
+			, TASK_REVIEW_CONTENT 		= #{taskReviewContent}
+			</if>
+			
+			, UPDATE_USR 				= #{updateUsr}
+			, UPDATE_DT 				= NOW()
+		</set>
+		<where>
+			TASK_ID = #{taskId}
+		</where>
+	</update>
+		
+	<update id="updateReportTaskState" parameterType="InsertReportTaskDTO">
+		UPDATE REPORT_TASK_MASTER
+		<set>
+			TASK_STATE_CD	= #{taskStateCd}
+
+			<choose>
+				<when test = 'reportTaskCfmYn == "Y" and taskReviewDt != null and taskReviewDt != ""'>
+				, TASK_REVIEW_DT = #{taskReviewDt}
+				</when>
+				<otherwise>
+				, TASK_REVIEW_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+				</otherwise>
+			</choose>
+			
+			, UPDATE_USR 	= #{updateUsr}
+			, UPDATE_DT 	= NOW()
+		</set>
+		<where>
+			TASK_ID = #{taskId}
+		</where>
+	</update>	
+	
+	<update id="updateReportTaskEmp" parameterType="InsertReportTaskDTO">
+		UPDATE REPORT_TASK_EMP
+		<set>
+			TASK_EMP_CD = "CM005CD003"
+			<choose>
+				<when test = 'reportTaskCfmYn == "Y" and taskReviewDt != null and taskReviewDt != ""'>
+				, TASK_EMP_REVIEW_DT = #{taskReviewDt}
+				</when>
+				<otherwise>
+				, TASK_EMP_REVIEW_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+				</otherwise>
+			</choose>
+			, UPDATE_USR 	= #{updateUsr}
+			, UPDATE_DT 	= NOW()
+		</set>
+		<where>
+			TASK_ID = #{taskId}
+			AND EMAIL = #{updateUsr}
+		</where>
+	</update>
+	
+	<update id="deleteReportTaskMaster" parameterType="InsertReportTaskDTO">
+		UPDATE REPORT_TASK_MASTER
+		<set>
+			DEL_YN 			= 'Y'
+			, UPDATE_USR 	= #{updateUsr}
+			, UPDATE_DT 	= NOW()
+		</set>
+		<where>
+			TASK_ID = #{taskId}
+		</where>
+	</update>	
+	
+	<delete id="deleteReportTaskEmp">
+		DELETE FROM
+			REPORT_TASK_EMP
+		<where>
+			TASK_ID = #{taskId}
+		</where>
+	</delete>	
+	
+    <select id="selectReportTaskState" parameterType="Map" resultType="SelectReportTaskDTO">
+    	SELECT
+			TASK_STATE_CD
+    	FROM
+    		REPORT_TASK_MASTER
+    	WHERE
+    		TASK_ID = #{taskId}
+    		AND DEL_YN = #{delYn}
+    </select>	
+</mapper>

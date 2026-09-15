@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.file.FileMapper">
+	<insert id="insertFileMaster">
+		INSERT
+			FILE_MASTER (
+				DOMAIN_ID
+				, COMPANY_CD
+				, TASK_ID
+			    , PROJECT_ID
+				, FILE_NM
+				, FILE_DISP_NM
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+			VALUES (
+				#{domainId}
+				, #{companyCd}
+				, #{taskId}
+				, #{projectId}
+				, #{fileNm}
+				, #{fileDispNm}
+				, #{createUsr}
+				, NOW()
+				, #{createUsr}
+				, NOW()
+			)
+	</insert>
+	
+	<select id="getFileList" parameterType="kr.co.dbinc.task.dto.task.GetTaskDetailDTO$GetTaskDetailRequest" resultType="GetFileListResponse">
+		SELECT
+			F.DOMAIN_ID
+			, F.COMPANY_CD
+			, F.FILE_ID
+			, F.FILE_NM
+			, F.FILE_DISP_NM
+		FROM
+			FILE_MASTER F
+		<where>
+			F.DOMAIN_ID = #{domainId}
+			AND F.TASK_ID = #{taskId}
+		</where>
+	</select>
+	
+	<select id="getFileList2" parameterType="Map" resultType="GetFileListResponse">
+		SELECT
+			F.DOMAIN_ID
+			, F.COMPANY_CD
+			, F.FILE_ID
+			, F.FILE_NM
+			, F.FILE_DISP_NM
+		FROM
+			FILE_MASTER F
+		<where>
+			F.DOMAIN_ID = #{domainId}
+			AND F.TASK_ID = #{taskId}
+		</where>
+	</select>
+	
+	<delete id="deleteFileList">
+		DELETE FROM
+			FILE_MASTER
+		WHERE
+			DOMAIN_ID = #{domainId}
+			AND TASK_ID = #{taskId}
+	</delete>
+
+
+    <select id="getFileListByProjectCnt" parameterType="Map" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            file_master fm
+            INNER JOIN task_master tm ON (fm.TASK_ID = tm.TASK_ID AND (tm.DEL_YN = 'N' OR tm.DEL_YN IS NULL))
+        WHERE
+            fm.project_id = #{projectId}
+        <if test="fileDispNm != null and fileDispNm != ''">
+            AND fm.FILE_DISP_NM LIKE CONCAT('%', #{fileDispNm}, '%')
+        </if>
+    </select>
+
+    <select id="getFileListByProject" parameterType="Map" resultType="GetFileListResponse">
+        SELECT
+            fm.DOMAIN_ID
+            , fm.COMPANY_CD
+            , fm.FILE_ID
+            , fm.TASK_ID
+            , tm.TASK_NM
+            , tm.TASK_TYPE_CD
+            , SF_GET_CODE_NM('ko-KR', 'CM007', tm.TASK_TYPE_CD, tm.COMPANY_CD, tm.DOMAIN_ID) AS TASK_TYPE_NM
+            , fm.PROJECT_ID
+            , fm.FILE_NM
+            , fm.FILE_DISP_NM
+            , fm.UPDATE_USR
+            , CONVERT_TZ(fm.UPDATE_DT, '+00:00', '+09:00') AS UPDATE_DT
+            , fm.CREATE_USR
+            , CONVERT_TZ(fm.CREATE_DT, '+00:00', '+09:00') AS CREATE_DT
+        FROM
+            file_master fm
+            INNER JOIN task_master tm ON (fm.TASK_ID = tm.TASK_ID AND (tm.DEL_YN = 'N' OR tm.DEL_YN IS NULL))
+        WHERE
+            fm.project_id = #{projectId}
+        <if test="fileDispNm != null and fileDispNm != ''">
+            AND fm.FILE_DISP_NM LIKE CONCAT('%', #{fileDispNm}, '%')
+        </if>
+        ORDER BY
+            fm.CREATE_DT
+            , tm.TASK_NM
+        <if test="length != null and length != ''">
+            LIMIT #{start}, #{length}
+        </if>
+    </select>
+</mapper>

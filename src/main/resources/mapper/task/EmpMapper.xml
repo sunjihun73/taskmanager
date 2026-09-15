@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.task.EmpMapper">
+
+	<select id="getEmpList" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpResponse">
+		SELECT
+            E.DOMAIN_ID
+			, C.COMPANY_NM
+			, E.COMPANY_CD
+			, E.EMAIL
+			, E.EMP_NM
+			, SF_GET_CODE_NM('ko-KR', '03000', E.POS_CD, E.COMPANY_CD, E.DOMAIN_ID) AS POS_NM
+			, D.DEPT_NM
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			AND E.EMAIL != #{email}
+			AND (E.HIDDEN_YN != 'Y' OR E.HIDDEN_YN IS NULL)
+			<if test="deptCd != null and deptCd != ''">
+				AND D.DEPT_CD = #{deptCd}
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+		</where>
+		ORDER BY DEPT_ORD, DEPT_NM, EMP_NM
+		<if test="length != null and length != ''">
+			LIMIT #{start}, #{length}
+		</if>
+	</select>
+	
+	<select id="getEmpListCnt" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			AND E.EMAIL != #{email}
+			AND (E.HIDDEN_YN != 'Y' OR E.HIDDEN_YN IS NULL)
+			<if test="deptCd != null and deptCd != ''">
+				AND D.DEPT_CD = #{deptCd}
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+		</where>
+		ORDER BY DEPT_ORD, DEPT_NM, EMP_NM
+	</select>
+	
+	<select id="getEmpAllList" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpResponse">
+		SELECT 
+			C.COMPANY_NM
+		    , E.DOMAIN_ID
+			, E.COMPANY_CD
+			, E.EMAIL
+			, E.EMP_NM
+			, SF_GET_CODE_NM('ko-KR', '03000', E.POS_CD, E.COMPANY_CD, E.DOMAIN_ID) AS POS_NM
+			, D.DEPT_NM
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			AND (E.HIDDEN_YN != 'Y' OR E.HIDDEN_YN IS NULL)
+			<if test="deptCd != null and deptCd != ''">
+				AND D.DEPT_CD = #{deptCd}
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+		</where>
+		ORDER BY DEPT_ORD, DEPT_NM, EMP_NM
+		<if test="length != null and length != ''">
+			LIMIT #{start}, #{length}
+		</if>
+	</select>
+	
+	<select id="getEmpAllListCnt" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM EMP_MASTER E
+			INNER JOIN DEPT_MASTER D ON (E.DEPT_CD = D.DEPT_CD AND E.COMPANY_CD = D.COMPANY_CD AND E.DOMAIN_ID = D.DOMAIN_ID)
+			INNER JOIN COMPANY_MASTER C ON (E.COMPANY_CD = C.COMPANY_CD AND E.DOMAIN_ID = C.DOMAIN_ID)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			AND (E.HIDDEN_YN != 'Y' OR E.HIDDEN_YN IS NULL)
+			<if test="deptCd != null and deptCd != ''">
+				AND D.DEPT_CD = #{deptCd}
+			</if>
+			<if test="empNm != null and empNm != ''">
+				AND E.EMP_NM LIKE REPLACE(CONCAT('%', #{empNm}, '%'), ' ','')
+			</if>
+		</where>
+		ORDER BY DEPT_ORD, DEPT_NM, EMP_NM
+	</select>	
+	
+	<select id="getLeader" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpResponse">
+		SELECT
+			E.EMP_NM
+			, E.EMAIL
+			, E.COMPANY_CD
+		FROM 
+			EMP_MASTER E
+			JOIN DEPT_MASTER D ON (E.DOMAIN_ID = D.DOMAIN_ID AND E.COMPANY_CD = D.COMPANY_CD AND E.DEPT_CD = D.DEPT_CD)
+			JOIN CODE_DETAIL C ON (E.DOMAIN_ID = C.DOMAIN_ID AND E.COMPANY_CD = C.COMPANY_CD AND E.POS_CD = C.CODE)
+		<where>
+			E.DOMAIN_ID = #{domainId}
+			AND E.COMPANY_CD = #{companyCd}
+			AND D.DEPT_CD = (SELECT DEPT_CD FROM EMP_MASTER WHERE DOMAIN_ID = #{domainId} AND EMAIL = #{email})
+			AND C.CODE_DIV = '03000'
+			AND (E.HIDDEN_YN != 'Y' OR E.HIDDEN_YN IS NULL)
+		</where>
+		ORDER BY C.SORT_ORD
+		LIMIT 1
+	</select>
+
+    <select id="getEmp" parameterType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpRequest" resultType="kr.co.dbinc.task.dto.emp.GetEmpDTO$GetEmpResponse">
+        SELECT
+            em.DOMAIN_ID
+            , em.COMPANY_CD
+            , em.EMAIL
+            , em.EMP_NM
+            , em.EMP_ENG_NM
+            , em.EMP_NO
+            , em.POS_CD
+            , em.DEPT_CD
+            , em.EMP_STATUS_CD
+            , em.ENTER_DT
+            , em.QUIT_DT
+            , em.HIDDEN_YN
+            , em.JOB_TEL_NO
+            , em.MOBILE_TEL_NO
+            , em.MANUAL_MNG_YN
+            , em.UPDATE_USR
+            , CONVERT_TZ(em.UPDATE_DT, '+00:00', '+09:00') AS UPDATE_DT
+            , em.CREATE_USR
+            , CONVERT_TZ(em.CREATE_DT, '+00:00', '+09:00') AS CREATE_DT
+        FROM
+            EMP_MASTER em
+        <where>
+            em.DOMAIN_ID = #{domainId}
+            AND em.EMAIL = #{email}
+        </where>
+    </select>
+</mapper>

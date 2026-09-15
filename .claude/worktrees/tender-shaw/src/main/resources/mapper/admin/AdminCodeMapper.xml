@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.admin.AdminCodeMapper">
+
+	<delete id="deleteCode">
+		DELETE FROM
+			CODE_DETAIL
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+		</where>
+	</delete>
+	
+	<insert id="updateCodeFromSync">
+		REPLACE INTO 
+			CODE_DETAIL (
+				DOMAIN_ID
+				, COMPANY_CD
+				, CODE_DIV
+				, CODE
+				, CODE_NM
+				, USE_YN
+				, SORT_ORD
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+		SELECT
+			DOMAIN_ID
+			, COMPANY_CD
+			, CODE_DIV
+			, CODE
+			, CODE_NM
+			, USE_YN
+			, SORT_ORD
+			, 'SYSTEM'
+			, now()
+			, 'SYSTEM'
+			, now()
+		FROM
+			sync_code_detail_${tempDomainId}
+		<where> 
+			AND DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+		</where>
+	</insert>
+
+    <select id="getCodeDetailList4SelBox" parameterType="Map" resultType="CodeDTO">
+        SELECT
+            DOMAIN_ID
+            , COMPANY_CD
+            , CODE_DIV
+            , CODE
+            , CODE_NM
+            , USE_YN
+            , SORT_ORD
+            , UPDATE_USR
+            , UPDATE_DT
+            , CREATE_USR
+            , CREATE_DT
+        FROM
+            CODE_DETAIL
+        <where>
+            AND DOMAIN_ID = #{domainId}
+            AND COMPANY_CD = #{companyCd}
+            AND CODE_DIV = #{codeDiv}
+
+            <if test="useYn != null and useYn != ''">
+                AND USE_YN = #{useYn}
+            </if>
+
+        </where>
+        ORDER BY
+            SORT_ORD
+    </select>
+	
+</mapper>

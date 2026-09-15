@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.project.ProjectMapper">
+
+    <select id="getProject" parameterType="kr.co.dbinc.task.dto.project.GetProjectDTO$GetProjectRequest" resultType="kr.co.dbinc.task.dto.project.GetProjectDTO$GetProjectResponse">
+        SELECT
+            pm.DOMAIN_ID
+            , pm.COMPANY_CD
+            , pm.PROJECT_ID
+            , pm.PROJECT_NM
+            , pm.PROJECT_DESC
+            , pm.PROJECT_STATE_CD
+            , SF_GET_CODE_NM('ko-KR', 'CM008', pm.PROJECT_STATE_CD, pm.COMPANY_CD, pm.DOMAIN_ID) AS PROJECT_STATE_NM
+            , pm.PROJECT_CATEGORY_CD
+            , pm.PROJECT_START_DT
+            , pm.PROJECT_END_DT
+            , pm.PROJECT_OWNER_MEMBER_ID
+            , SF_GET_MEMBER_NAME(pm.PROJECT_OWNER_MEMBER_ID) AS PROJECT_OWNER_MEMBER_NM
+            , pm.DEL_YN
+            , pm.UPDATE_USR
+            , CONVERT_TZ(pm.UPDATE_DT, '+00:00', '+09:00') AS UPDATE_DT
+            , pm.CREATE_USR
+            , CONVERT_TZ(pm.CREATE_DT, '+00:00', '+09:00') AS CREATE_DT
+        FROM
+            project_master pm
+        WHERE
+            pm.PROJECT_ID = #{projectId}
+            AND pm.DEL_YN = #{delYn}
+    </select>
+
+    <select id="getProjectsCnt" parameterType="kr.co.dbinc.task.dto.project.GetProjectDTO$GetProjectRequest" resultType="int">
+        SELECT
+            COUNT(DISTINCT pm.PROJECT_ID)
+        FROM
+            project_master pm
+            LEFT JOIN PROJECT_EMP pe ON (
+                pm.PROJECT_ID = pe.PROJECT_ID
+                AND pm.DOMAIN_ID = pe.DOMAIN_ID
+                AND pe.PROJECT_EMP_CD = 'CM004CD002'
+                AND pe.EMAIL = #{email}
+            )
+        <where>
+            pm.DOMAIN_ID = #{domainId}
+            AND pm.COMPANY_CD = #{companyCd}
+            AND (
+                pm.PROJECT_OWNER_MEMBER_ID = #{email}
+                OR pe.EMAIL = #{email}
+            )
+            <if test="delYn != null and delYn != ''">
+                AND pm.DEL_YN = #{delYn}
+            </if>
+
+            <if test="projectNm != null and projectNm != ''">
+                AND pm.PROJECT_NM LIKE CONCAT('%', #{projectNm}, '%')
+            </if>
+
+            <if test="projectStateCd != null and projectStateCd != ''">
+                AND pm.PROJECT_STATE_CD = #{projectStateCd}
+            </if>
+
+            <if test="projectStartDt != null and projectStartDt != ''">
+                AND pm.PROJECT_START_DT >= #{projectStartDt}
+            </if>
+
+            <if test="projectEndDt != null and projectEndDt != ''">
+                AND pm.PROJECT_END_DT  <![CDATA[<=]]> #{projectEndDt}
+            </if>
+        </where>
+    </select>
+
+	<select id="getProjects" parameterType="kr.co.dbinc.task.dto.project.GetProjectDTO$GetProjectRequest" resultType="kr.co.dbinc.task.dto.project.GetProjectDTO$GetProjectResponse">
+        SELECT
+            DISTINCT
+            pm.DOMAIN_ID
+            , pm.COMPANY_CD
+            , pm.PROJECT_ID
+            , pm.PROJECT_NM
+            , pm.PROJECT_DESC
+            , pm.PROJECT_STATE_CD
+            , SF_GET_CODE_NM('ko-KR', 'CM008', pm.PROJECT_STATE_CD, pm.COMPANY_CD, pm.DOMAIN_ID) AS PROJECT_STATE_NM
+            , pm.PROJECT_CATEGORY_CD
+            , pm.PROJECT_START_DT
+            , pm.PROJECT_END_DT
+            , pm.PROJECT_OWNER_MEMBER_ID
+            , SF_GET_MEMBER_NAME(pm.PROJECT_OWNER_MEMBER_ID) AS PROJECT_OWNER_MEMBER_NM
+            , pm.DEL_YN
+            , pm.UPDATE_USR
+            , CONVERT_TZ(pm.UPDATE_DT, '+00:00', '+09:00') AS UPDATE_DT
+            , pm.CREATE_USR
+            , CONVERT_TZ(pm.CREATE_DT, '+00:00', '+09:00') AS CREATE_DT
+            , pe.EMAIL
+        FROM
+            project_master pm
+            LEFT JOIN PROJECT_EMP pe ON (
+                pm.PROJECT_ID = pe.PROJECT_ID
+                AND pm.DOMAIN_ID = pe.DOMAIN_ID
+                AND pe.PROJECT_EMP_CD = 'CM004CD002'
+                AND pe.EMAIL = #{email}
+            )
+        <where>
+            pm.DOMAIN_ID = #{domainId}
+            AND pm.COMPANY_CD = #{companyCd}
+            AND (
+                pm.PROJECT_OWNER_MEMBER_ID = #{email}
+                OR pe.EMAIL = #{email}
+            )
+
+            <if test="delYn != null and delYn != ''">
+                AND pm.DEL_YN = #{delYn}
+            </if>
+
+            <if test="projectNm != null and projectNm != ''">
+                AND pm.PROJECT_NM LIKE CONCAT('%', #{projectNm}, '%')
+            </if>
+
+            <if test="projectStateCd != null and projectStateCd != ''">
+                AND pm.PROJECT_STATE_CD = #{projectStateCd}
+            </if>
+
+            <if test="projectStartDt != null and projectStartDt != ''">
+                AND pm.PROJECT_START_DT >= #{projectStartDt}
+            </if>
+
+            <if test="projectEndDt != null and projectEndDt != ''">
+                AND pm.PROJECT_END_DT  <![CDATA[<=]]> #{projectEndDt}
+            </if>
+        </where>
+        ORDER BY
+            pm.CREATE_DT
+		<if test="length != null and length != ''">
+			LIMIT #{start}, #{length}
+		</if>
+	</select>
+
+    <insert id="insertProjectMaster" parameterType="ModifyProjectRequestDTO">
+        INSERT INTO PROJECT_MASTER (
+            DOMAIN_ID
+            , COMPANY_CD
+            , PROJECT_ID
+            , PROJECT_NM
+            , PROJECT_DESC
+            , PROJECT_STATE_CD
+            , PROJECT_CATEGORY_CD
+            , PROJECT_START_DT
+            , PROJECT_END_DT
+            , PROJECT_OWNER_MEMBER_ID
+            , DEL_YN
+			, UPDATE_USR
+			, UPDATE_DT
+			, CREATE_USR
+			, CREATE_DT
+		)
+		VALUES (
+            #{domainId}
+            , #{companyCd}
+            , #{projectId}
+            , #{projectNm}
+            , #{projectDesc}
+            , #{projectStateCd}
+            , #{projectCategoryCd}
+            , #{projectStartDt}
+            , #{projectEndDt}
+            , #{projectOwnerMemberId}
+            , #{delYn}
+            , #{updateUsr}
+            , NOW()
+            , #{createUsr}
+            , NOW()
+        )
+    </insert>
+
+    <update id="updateProjectMaster" parameterType="ModifyProjectRequestDTO">
+        UPDATE PROJECT_MASTER SET
+            PROJECT_NM              = #{projectNm}
+            , PROJECT_DESC          = #{projectDesc}
+            , PROJECT_STATE_CD      = #{projectStateCd}
+            , PROJECT_CATEGORY_CD   = #{projectCategoryCd}
+            , PROJECT_START_DT      = #{projectStartDt}
+            , PROJECT_END_DT        = #{projectEndDt}
+            , PROJECT_OWNER_MEMBER_ID = #{projectOwnerMemberId}
+            , UPDATE_USR            = #{updateUsr}
+            , UPDATE_DT             = NOW()
+        WHERE
+            PROJECT_ID = #{projectId}
+    </update>
+
+    <update id="deleteProjectMaster" parameterType="DeleteProjectRequestDTO">
+        UPDATE PROJECT_MASTER SET
+            DEL_YN          = #{delYn}
+            , UPDATE_USR    = #{updateUsr}
+            , UPDATE_DT     = NOW()
+        WHERE
+            PROJECT_ID = #{projectId}
+    </update>
+
+    <insert id="insertProjectEmp" parameterType="ProjectEmpDTO">
+        INSERT INTO PROJECT_EMP (
+            DOMAIN_ID
+            , COMPANY_CD
+            , EMAIL
+            , PROJECT_ID
+            , PROJECT_EMP_CD
+            , UPDATE_USR
+            , UPDATE_DT
+            , CREATE_USR
+            , CREATE_DT
+        )
+        VALUES (
+            #{domainId}
+            , #{companyCd}
+            , #{email}
+            , #{projectId}
+            , #{projectEmpCd}
+            , #{updateUsr}
+            , NOW()
+            , #{createUsr}
+            , NOW()
+        )
+    </insert>
+
+    <select id="getProjectEmps" parameterType="Map" resultType="ProjectEmpDTO">
+        SELECT
+            pm.DOMAIN_ID
+             , pm.COMPANY_CD
+             , pm.EMAIL
+             , em.EMP_NM
+             , pm.PROJECT_ID
+             , pm.PROJECT_EMP_CD
+             , pm.UPDATE_USR
+             , CONVERT_TZ(pm.UPDATE_DT, '+00:00', '+09:00') AS UPDATE_DT
+             , pm.CREATE_USR
+             , CONVERT_TZ(pm.CREATE_DT, '+00:00', '+09:00') AS CREATE_DT
+        FROM
+            PROJECT_EMP pm
+            INNER JOIN EMP_MASTER em ON (pm.EMAIL = em.EMAIL)
+        WHERE
+            pm.DOMAIN_ID = #{domainId}
+            AND pm.PROJECT_ID = #{projectId}
+            AND pm.PROJECT_EMP_CD = #{projectEmpCd}
+    </select>
+
+    <select id="getAllProjectEmps" parameterType="Map" resultType="ProjectEmpDTO">
+        SELECT
+            pm.DOMAIN_ID
+             , pm.COMPANY_CD
+             , pm.EMAIL
+             , em.EMP_NM
+             , pm.PROJECT_ID
+             , pm.PROJECT_EMP_CD
+             , pm.UPDATE_USR
+             , CONVERT_TZ(pm.UPDATE_DT, '+00:00', '+09:00') AS UPDATE_DT
+             , pm.CREATE_USR
+             , CONVERT_TZ(pm.CREATE_DT, '+00:00', '+09:00') AS CREATE_DT
+        FROM
+            PROJECT_EMP pm
+            INNER JOIN EMP_MASTER em ON (pm.EMAIL = em.EMAIL)
+        WHERE
+            pm.DOMAIN_ID = #{domainId}
+            AND pm.PROJECT_ID = #{projectId}
+    </select>
+
+    <delete id="deleteProjectEmp" parameterType="Map">
+        DELETE FROM PROJECT_EMP
+        WHERE
+            DOMAIN_ID = #{domainId}
+            AND PROJECT_ID = #{projectId}
+    </delete>
+
+    <select id="getProjectEmpsCnt4Modal" parameterType="ProjectEmpDTO" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            project_emp pm
+            INNER JOIN company_master cm ON (pm.DOMAIN_ID = cm.DOMAIN_ID AND cm.COMPANY_CD = pm.COMPANY_CD)
+            INNER JOIN emp_master em ON (pm.EMAIL = em.EMAIL)
+            INNER JOIN DEPT_MASTER dm ON (em.DEPT_CD = dm.DEPT_CD AND em.DOMAIN_ID = dm.DOMAIN_ID AND em.COMPANY_CD = dm.COMPANY_CD)
+        WHERE
+            pm.PROJECT_ID = #{projectId}
+            AND STR_TO_DATE(em.ENTER_DT, '%Y%m%d') <![CDATA[<=]]> CURDATE()
+            AND (
+                em.QUIT_DT IS NULL
+                OR em.QUIT_DT = ''
+                OR STR_TO_DATE(em.QUIT_DT, '%Y%m%d') >= CURDATE()
+            )
+        <if test="empNm != null and empNm != ''">
+            AND em.EMP_NM LIKE CONCAT('%', #{empNm}, '%')
+        </if>
+    </select>
+
+
+    <select id="getProjectEmps4Modal" parameterType="ProjectEmpDTO" resultType="ProjectEmpDTO">
+        SELECT
+            pm.DOMAIN_ID
+            , pm.COMPANY_CD
+            , cm.COMPANY_NM
+            , pm.EMAIL
+            , em.EMP_NM
+            , SF_GET_CODE_NM('ko-KR', '03000', em.POS_CD, em.COMPANY_CD, em.DOMAIN_ID) AS POS_NM
+            , dm.DEPT_NM
+            , pm.PROJECT_ID
+            , pm.PROJECT_EMP_CD
+            , SF_GET_CODE_NM('ko-KR', 'CM004', pm.PROJECT_EMP_CD, pm.COMPANY_CD, pm.DOMAIN_ID) AS PROJECT_EMP_NM
+            , pm.UPDATE_USR
+            , CONVERT_TZ(pm.UPDATE_DT, '+00:00', '+09:00') AS UPDATE_DT
+            , pm.CREATE_USR
+            , CONVERT_TZ(pm.CREATE_DT, '+00:00', '+09:00') AS CREATE_DT
+        FROM
+            project_emp pm
+            INNER JOIN company_master cm ON (pm.DOMAIN_ID = cm.DOMAIN_ID AND cm.COMPANY_CD = pm.COMPANY_CD)
+            INNER JOIN emp_master em ON (pm.EMAIL = em.EMAIL)
+            INNER JOIN DEPT_MASTER dm ON (em.DEPT_CD = dm.DEPT_CD AND em.DOMAIN_ID = dm.DOMAIN_ID AND em.COMPANY_CD = dm.COMPANY_CD)
+        WHERE
+            pm.PROJECT_ID = #{projectId}
+            AND STR_TO_DATE(em.ENTER_DT, '%Y%m%d') <![CDATA[<=]]> CURDATE()
+            AND (
+                em.QUIT_DT IS NULL
+                OR em.QUIT_DT = ''
+                OR STR_TO_DATE(em.QUIT_DT, '%Y%m%d') >= CURDATE()
+            )
+        <if test="empNm != null and empNm != ''">
+            AND em.EMP_NM LIKE CONCAT('%', #{empNm}, '%')
+        </if>
+        ORDER BY
+            pm.PROJECT_EMP_CD DESC
+            , em.EMP_NM
+        <if test="length != null and length != ''">
+            LIMIT #{start}, #{length}
+        </if>
+    </select>
+</mapper>

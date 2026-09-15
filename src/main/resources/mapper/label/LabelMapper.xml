@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.label.LabelMapper">
+
+	<select id="getLabels" parameterType="kr.co.dbinc.task.dto.label.GetLabelDTO$GetLabelRequest" resultType="kr.co.dbinc.task.dto.label.GetLabelDTO$GetLabelResponse">
+		SELECT 
+			L.DOMAIN_ID
+			, L.COMPANY_CD
+			, L.LABEL_ID
+			, L.LABEL_NM
+			, L.UPDATE_USR
+			, L.UPDATE_DT
+			, L.CREATE_USR
+			, L.CREATE_DT
+		FROM
+			LABEL_MASTER L
+		<where>
+			L.DOMAIN_ID = #{domainId}
+			AND L.COMPANY_CD = #{companyCd}
+			AND L.EMAIL = #{email}
+			<if test="labelNm != null and labelNm != ''">
+				AND L.LABEL_NM LIKE REPLACE(CONCAT('%', #{labelNm}, '%'), ' ','')
+			</if>
+		</where>
+		ORDER BY 
+			LABEL_NM
+		<if test="length != null and length != ''">
+			LIMIT #{start}, #{length}
+		</if>
+	</select>
+	
+	<select id="getLabelsCnt" parameterType="kr.co.dbinc.task.dto.label.GetLabelDTO$GetLabelRequest" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM
+			LABEL_MASTER L
+		<where>
+			L.DOMAIN_ID = #{domainId}
+			AND L.COMPANY_CD = #{companyCd}
+			AND L.EMAIL = #{email}
+			<if test="labelNm != null and labelNm != ''">
+				AND L.LABEL_NM LIKE REPLACE(CONCAT('%', #{labelNm}, '%'), ' ','')
+			</if>
+		</where>
+		
+	</select>
+	
+	<insert id="insertLabelMaster" useGeneratedKeys="true" keyProperty="labelId">
+		INSERT
+			LABEL_MASTER (
+				DOMAIN_ID
+				, COMPANY_CD
+				, LABEL_ID
+				, EMAIL
+				, LABEL_NM
+				, UPDATE_USR
+				, UPDATE_DT
+				, CREATE_USR
+				, CREATE_DT
+			)
+			VALUES (
+				#{domainId}
+				, #{companyCd}
+				, #{labelId}
+				, #{email}
+				, #{labelNm}
+				, #{email}
+				, NOW()
+				, #{email}
+				, NOW()
+			)
+	
+	</insert>
+	
+	<update id="updateLabelMaster">
+		UPDATE
+			LABEL_MASTER
+		<set>
+			LABEL_NM = #{labelNm}
+			, UPDATE_USR = #{email}
+			, UPDATE_DT = NOW()
+		</set>
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND LABEL_ID = #{labelId}
+			AND EMAIL = #{email}
+		</where>
+	
+	</update>
+	
+	<delete id="deleteLabelMaster">
+		DELETE FROM
+			LABEL_MASTER
+		WHERE
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND EMAIL = #{email}
+			AND LABEL_ID = #{labelId}
+	</delete>
+</mapper>

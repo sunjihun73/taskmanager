@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="kr.co.dbinc.task.mapper.task.DeptMapper">
+	
+	<select id="getDepts" parameterType="kr.co.dbinc.task.dto.dept.GetDeptDTO$GetDeptRequest" resultType="kr.co.dbinc.task.dto.dept.GetDeptDTO$GetDeptResponse">
+		SELECT
+			DEPT_CD
+			, DEPT_NM
+			, PARENT_DEPT_CD
+		FROM
+			DEPT_MASTER
+		<where>
+			DOMAIN_ID = #{domainId}
+			AND COMPANY_CD = #{companyCd}
+			AND (DEPT_USE_YN != 'N' OR DEPT_USE_YN IS NULL)
+		</where>
+		ORDER BY
+			DEPT_ORD, DEPT_NM
+	</select>
+	
+</mapper>
